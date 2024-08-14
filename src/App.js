@@ -4,6 +4,8 @@ import Main from "./pages/Main"
 import Question from "./pages/Question";
 import Complete from "./pages/Complete";
 import Record from "./common/record";
+import StartAudio from "./pages/StartAudio";
+import AudioPlayer from "./pages/AudioPlayer";
 
 function App() {
   return (
@@ -17,6 +19,7 @@ function App() {
           <Route path="/question" element={<Question />} />
           <Route path="/complete" element={<Complete />} />
           <Route path="/record" element={<Record />} />
+          <Route path="/audioplayer" element={<AudioPlayer />} />
         </Routes>
       </BrowserRouter>
     </>

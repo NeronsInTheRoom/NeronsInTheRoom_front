@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate from react-router-dom
 
-function Question() {
+const AudioPlayer = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [audioUrl, setAudioUrl] = useState('');
   const [text, setText] = useState('');
@@ -96,6 +96,6 @@ function Question() {
       )}
     </div>
   );
-}
+};
 
-export default Question;
+export default AudioPlayer;
