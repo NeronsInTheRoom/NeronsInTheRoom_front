@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate from react-router-dom
 
 const AudioPlayer = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -6,14 +7,15 @@ const AudioPlayer = () => {
   const [text, setText] = useState('');
   const [filename, setFilename] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate(); // Initialize useNavigate hook
 
   // 데이터 배열 정의
   const data = [
     { "key": "Q1", "value": "오늘의 날씨는 어떤가요?" },
     { "key": "Q2", "value": "어제 저녁에 무엇을 먹었나요?" },
-    { "key": "Q3", "value": "가장 좋아하는 취미는 무엇인가요?" },
-    { "key": "Q4", "value": "여행을 가고 싶은 곳은 어디인가요?" },
-    { "key": "Q5", "value": "마지막으로 읽은 책은 무엇인가요?" }
+    // { "key": "Q3", "value": "가장 좋아하는 취미는 무엇인가요?" },
+    // { "key": "Q4", "value": "여행을 가고 싶은 곳은 어디인가요?" },
+    // { "key": "Q5", "value": "마지막으로 읽은 책은 무엇인가요?" }
   ];
 
   const fetchAudio = async (index) => {
@@ -61,6 +63,10 @@ const AudioPlayer = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % data.length);
   };
 
+  const handleComplete = () => {
+    navigate('/complete'); // /complete 페이지로 이동
+  };
+
   return (
     <div>
       <div>
@@ -79,9 +85,15 @@ const AudioPlayer = () => {
         </div>
       )}
 
-      <button onClick={handleNext} disabled={isLoading}>
-        {isLoading ? 'Loading...' : 'Next'}
-      </button>
+      {currentIndex < data.length - 1 ? (
+        <button onClick={handleNext} disabled={isLoading}>
+          {isLoading ? 'Loading...' : 'Next'}
+        </button>
+      ) : (
+        <button onClick={handleComplete} disabled={isLoading}>
+          {isLoading ? 'Loading...' : 'Complete'}
+        </button>
+      )}
     </div>
   );
 };
