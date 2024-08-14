@@ -3,6 +3,7 @@ import Layouts from "./layouts/Layouts";
 import Main from "./pages/Main"
 import Question from "./pages/Question";
 import Complete from "./pages/Complete";
+import StartAudio from "./pages/StartAudio";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/" element={<Main />}/>
           <Route path="/question" element={<Question />} />
           <Route path="/complete" element={<Complete />} />
+          <Route path="/audio" element={<StartAudio />} />
         </Routes>
       </BrowserRouter>
     </>
