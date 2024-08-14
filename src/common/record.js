@@ -9,22 +9,26 @@ function AudioRecorder() {
   const startRecording = async () => {
     setIsRecording(true);
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorderRef.current = new MediaRecorder(stream);
-
+    
+    // MIME 타입을 'audio/webm'으로 설정
+    mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+  
     mediaRecorderRef.current.ondataavailable = (event) => {
       audioChunksRef.current.push(event.data);
     };
-
+  
     mediaRecorderRef.current.onstop = () => {
-      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
+      // 'audio/webm'으로 생성된 Blob
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       const url = URL.createObjectURL(audioBlob);
       setAudioURL(url);
       audioChunksRef.current = [];
       sendAudioToServer(audioBlob); // 녹음이 완료되면 서버로 전송
     };
-
+  
     mediaRecorderRef.current.start();
   };
+  
 
   const stopRecording = () => {
     setIsRecording(false);
@@ -33,7 +37,7 @@ function AudioRecorder() {
 
   const sendAudioToServer = async (audioBlob) => {
     const formData = new FormData();
-    formData.append("file", audioBlob, "recording.wav");
+    formData.append("file", audioBlob, "recording.webm");
 
     try {
       const response = await fetch("http://localhost:8000/uploadfile/", {  
