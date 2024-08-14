@@ -3,6 +3,7 @@ import Layouts from "./layouts/Layouts";
 import Main from "./pages/Main"
 import Question from "./pages/Question";
 import Complete from "./pages/Complete";
+import StartAudio from "./pages/StartAudio";
 import AudioPlayer from "./pages/AudioPlayer";
 
 function App() {
