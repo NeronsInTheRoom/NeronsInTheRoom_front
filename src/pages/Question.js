@@ -48,7 +48,6 @@ function Question() {
         { key: 'Q3', value: q3Data ? result.image_name || '이미지 없음' : '이미지 없음' },
         { key: 'Q4', value: result.selected_sentence }
       ]);
-      console.log(answer);
     } catch (error) {
       console.error('Error fetching questions:', error);
     }
@@ -117,43 +116,44 @@ function Question() {
     navigate('/complete');
   };
 
+  // Function to convert text with line breaks to HTML
+  const formatText = (text) => {
+    // Replace newline characters with <br />
+    return text.replace(/\n/g, '<br />');
+  };
+
   return (
-    <div>
-      <div>
-        <h3>Current Text:</h3>
-        <p>{text}</p>
-      </div>
-      {isLoading && <p>Generating audio...</p>}
+    <div className="ly_all hp_padding20 hp_pt80">
+      <div className="ly_wrap">
+        <div className="el_question" dangerouslySetInnerHTML={{ __html: formatText(text) }}></div>
 
-      {audioUrl && !isLoading && (
-        <div>
-          <h3>Generated Audio:</h3>
-          <audio key={audioUrl} controls autoPlay>
-            <source src={audioUrl} type="audio/wav" />
-            Your browser does not support the audio element.
-          </audio>
-        </div>
-      )}
-
-      {text === '사진 속 물체의 이름은 무엇인가요?' && imageUrl && (
-        <div>
-          <h3>Image:</h3>
+        {text === '사진 속 \n물체의 이름은 \n무엇인가요?' && imageUrl && (
           <img src={imageUrl} alt="Selected" style={{ width: '300px', height: 'auto' }} />
-        </div>
-      )}
+        )}
 
-      {currentIndex < data.length - 1 ? (
-        <button onClick={handleNext} disabled={isLoading}>
-          {isLoading ? 'Loading...' : 'Next'}
-        </button>
-      ) : (
-        <button onClick={handleComplete} disabled={isLoading}>
-          {isLoading ? 'Loading...' : 'Complete'}
-        </button>
-      )}
+        {data.length > 0 ? (
+          currentIndex < data.length - 1 ? (
+            isLoading ? ('Loading...') : 
+            (<button onClick={handleNext} disabled={isLoading} className="el_btn el_btnL el_btn__blue hp_mt100 hp_wd100">다음</button>)
+          ) : (
+            isLoading ? ('Loading...') : (
+            <button onClick={handleComplete} disabled={isLoading} className="el_btn el_btnL el_btn__blue hp_mt100 hp_wd100">완료</button>)
+          )
+        ) : (
+          <p>Loading data...</p> // 데이터 로딩 중 표시할 메시지
+        )}
 
-      <div>
-        <h3>Answer:</h3>
+        {isLoading && <p>Generating audio...</p>}
+
+        {audioUrl && !isLoading && (
+          <div>
+            <h3>Generated Audio:</h3>
+            <audio key={audioUrl} controls autoPlay>
+              <source src={audioUrl} type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        )}
         <ul>
           {answer.map((item) => (
             <li key={item.key}>{`${item.key}: ${item.value}`}</li>
