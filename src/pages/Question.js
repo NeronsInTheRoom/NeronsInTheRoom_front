@@ -14,6 +14,7 @@ function Question() {
   const [answer, setAnswer] = useState([]);
   const navigate = useNavigate();
 
+  // Fetch the initial data from the backend
   const fetchData = async () => {
     try {
       const response = await fetch('http://localhost:8000/api/questions');
@@ -52,10 +53,15 @@ function Question() {
     }
   }, [currentIndex, data]);
 
+  // Fetch audio file based on index
   const fetchAudio = async (index) => {
-    const { key, audio_text1, audio_text4 } = data[index];
-    let textToSpeak = key === "Q4" ? audio_text4 : (index === 0 ? audio_text1 : data[index].value);
-    
+    const { key, audio_text } = data[index];
+    // Determine which text to use for audio generation
+    const textToSpeak = (key === 'Q4' || key === 'Q1') && audio_text
+      ? audio_text
+      : data[index].value;
+
+    // Set filename and loading state
     const newFilename = `${key}.wav`;
     setFilename(newFilename);
     setIsLoading(true);
@@ -78,6 +84,8 @@ function Question() {
 
       const audioFileUrl = `http://localhost:8000/audio/${newFilename}`;
       setAudioUrl(audioFileUrl);
+      // Always use the value for text display
+      setText(data[index].value);
     } catch (error) {
       console.error('Error generating audio:', error);
     } finally {
@@ -85,8 +93,10 @@ function Question() {
     }
   };
 
+  // Handle the "Next" button click
   const handleNext = () => {
     setAudioUrl('');
+    setText('');
     setCurrentIndex((prevIndex) => {
       const newIndex = (prevIndex + 1) % data.length;
       fetchAudio(newIndex); // Fetch new audio and update text
@@ -94,6 +104,7 @@ function Question() {
     });
   };
 
+  // Handle the "Complete" button click
   const handleComplete = () => {
     navigate('/complete');
   };
