@@ -35,10 +35,11 @@ function Question() {
       }
 
       setAnswer([
-        result.selected_words.join(", "),
-        `${q2Data.month} ${q2Data.weekday}`,
-        result.selected_sentence
+        { key: 'Q1', value: result.selected_words.join(", ") },
+        { key: 'Q2', value: `${q2Data.month}, ${q2Data.weekday}` },
+        { key: 'Q4', value: result.selected_sentence }
       ]);
+      console.log(answer)
     } catch (error) {
       console.error('Error fetching questions:', error);
     }
@@ -107,6 +108,7 @@ function Question() {
   const handleNext = () => {
     setAudioUrl('');
     setText('');
+    setImageUrl('');
     setCurrentIndex((prevIndex) => {
       const newIndex = (prevIndex + 1) % data.length;
       fetchAudio(newIndex);
@@ -156,7 +158,11 @@ function Question() {
 
       <div>
         <h3>Answer:</h3>
-        <p>{answer.join(", ")}</p>
+        <ul>
+          {answer.map((item) => (
+            <li key={item.key}>{`${item.key}: ${item.value}`}</li>
+          ))}
+        </ul>
       </div>
     </div>
   );
