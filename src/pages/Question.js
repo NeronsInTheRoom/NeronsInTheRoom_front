@@ -7,34 +7,68 @@ function Question() {
   const [text, setText] = useState('');
   const [filename, setFilename] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate(); // Initialize useNavigate hook
+  const [data, setData] = useState([]);
+  const [selectedWords, setSelectedWords] = useState([]);
+  const [month, setMonth] = useState('');
+  const [weekday, setWeekday] = useState('');
+  const [answer, setAnswer] = useState([]);
+  const navigate = useNavigate();
 
-  // 데이터 배열 정의
-  const data = [
-    { "key": "Q1", "value": "오늘의 날씨는 어떤가요?" },
-    { "key": "Q2", "value": "어제 저녁에 무엇을 먹었나요?" },
-    // { "key": "Q3", "value": "가장 좋아하는 취미는 무엇인가요?" },
-    // { "key": "Q4", "value": "여행을 가고 싶은 곳은 어디인가요?" },
-    // { "key": "Q5", "value": "마지막으로 읽은 책은 무엇인가요?" }
-  ];
+  const fetchData = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/questions');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const result = await response.json();
+      setData(result.questions);
+      setSelectedWords(result.selected_words);
+      setText(result.questions[0].value); // Display the initial value
+      setFilename(`${result.questions[0].key}.wav`);
+
+      const q2Data = result.questions.find(q => q.key === 'Q2');
+      if (q2Data) {
+        setMonth(q2Data.month);
+        setWeekday(q2Data.weekday);
+      }
+
+      setAnswer([
+        result.selected_words.join(", "),
+        `${q2Data.month} ${q2Data.weekday}`,
+        result.selected_sentence
+      ]);
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (data.length > 0) {
+      fetchAudio(currentIndex);
+    }
+  }, [currentIndex, data]);
 
   const fetchAudio = async (index) => {
-    const { key, value } = data[index];
-    setText(value);
+    const { key, audio_text1, audio_text4 } = data[index];
+    let textToSpeak = key === "Q4" ? audio_text4 : (index === 0 ? audio_text1 : data[index].value);
+    
     const newFilename = `${key}.wav`;
     setFilename(newFilename);
-    setIsLoading(true); // 요청 시작 시 로딩 상태로 설정
+    setIsLoading(true);
 
     try {
-      // 음성 생성 요청을 서버로 보내기
       const response = await fetch('http://localhost:8000/ttsmodule', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          text: value,
-          filename: newFilename
+          text: textToSpeak,
+          filename: newFilename,
         }),
       });
 
@@ -42,29 +76,26 @@ function Question() {
         throw new Error('Network response was not ok');
       }
 
-      // 파일 경로 설정 (요청 완료 후 URL 업데이트)
       const audioFileUrl = `http://localhost:8000/audio/${newFilename}`;
       setAudioUrl(audioFileUrl);
     } catch (error) {
       console.error('Error generating audio:', error);
     } finally {
-      setIsLoading(false); // 요청이 끝나면 로딩 상태 해제
+      setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    // 컴포넌트가 마운트되거나 currentIndex가 변경될 때 오디오 요청
-    fetchAudio(currentIndex);
-  }, [currentIndex]);
-
   const handleNext = () => {
-    // 다음 항목으로 이동 (끝까지 갔으면 처음으로 돌아감)
-    setAudioUrl(''); // 이전 오디오 파일을 제거
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % data.length);
+    setAudioUrl('');
+    setCurrentIndex((prevIndex) => {
+      const newIndex = (prevIndex + 1) % data.length;
+      fetchAudio(newIndex); // Fetch new audio and update text
+      return newIndex;
+    });
   };
 
   const handleComplete = () => {
-    navigate('/complete'); // /complete 페이지로 이동
+    navigate('/complete');
   };
 
   return (
@@ -94,6 +125,11 @@ function Question() {
           {isLoading ? 'Loading...' : 'Complete'}
         </button>
       )}
+
+      <div>
+        <h3>Answer:</h3>
+        <p>{answer.join(", ")}</p>
+      </div>
     </div>
   );
 }
