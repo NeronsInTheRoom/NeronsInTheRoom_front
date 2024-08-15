@@ -12,6 +12,7 @@ function Question() {
   const [month, setMonth] = useState('');
   const [weekday, setWeekday] = useState('');
   const [answer, setAnswer] = useState([]);
+  const [imageUrl, setImageUrl] = useState('');
   const navigate = useNavigate();
 
   // Fetch the initial data from the backend
@@ -56,12 +57,10 @@ function Question() {
   // Fetch audio file based on index
   const fetchAudio = async (index) => {
     const { key, audio_text } = data[index];
-    // Determine which text to use for audio generation
     const textToSpeak = (key === 'Q4' || key === 'Q1') && audio_text
       ? audio_text
       : data[index].value;
 
-    // Set filename and loading state
     const newFilename = `${key}.wav`;
     setFilename(newFilename);
     setIsLoading(true);
@@ -84,8 +83,19 @@ function Question() {
 
       const audioFileUrl = `http://localhost:8000/audio/${newFilename}`;
       setAudioUrl(audioFileUrl);
-      // Always use the value for text display
       setText(data[index].value);
+
+      // Fetch random image if the question key is Q3
+      if (data[index].key === 'Q3') {
+        const imageResponse = await fetch('http://localhost:8000/random-image');
+        if (!imageResponse.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const imageBlob = await imageResponse.blob();
+        setImageUrl(URL.createObjectURL(imageBlob));
+      } else {
+        setImageUrl('');
+      }
     } catch (error) {
       console.error('Error generating audio:', error);
     } finally {
@@ -99,7 +109,7 @@ function Question() {
     setText('');
     setCurrentIndex((prevIndex) => {
       const newIndex = (prevIndex + 1) % data.length;
-      fetchAudio(newIndex); // Fetch new audio and update text
+      fetchAudio(newIndex);
       return newIndex;
     });
   };
@@ -124,6 +134,13 @@ function Question() {
             <source src={audioUrl} type="audio/wav" />
             Your browser does not support the audio element.
           </audio>
+        </div>
+      )}
+
+      {imageUrl && (
+        <div>
+          <h3>Random Image:</h3>
+          <img src={imageUrl} alt="Random" style={{ maxWidth: '100%', maxHeight: '500px' }} />
         </div>
       )}
 
