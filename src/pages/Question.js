@@ -29,17 +29,26 @@ function Question() {
       setFilename(`${result.questions[0].key}.wav`);
 
       const q2Data = result.questions.find(q => q.key === 'Q2');
+      const q3Data = result.questions.find(q => q.key === 'Q3');
       if (q2Data) {
         setMonth(q2Data.month);
         setWeekday(q2Data.weekday);
+      }
+      
+      // Set the image URL if there is a selected image
+      if (q3Data && q3Data.image_filename) {
+        setImageUrl(`http://localhost:8000/image/${q3Data.image_filename}`);
+      } else {
+        setImageUrl('');
       }
 
       setAnswer([
         { key: 'Q1', value: result.selected_words.join(", ") },
         { key: 'Q2', value: `${q2Data.month}, ${q2Data.weekday}` },
+        { key: 'Q3', value: q3Data ? result.image_name || '이미지 없음' : '이미지 없음' },
         { key: 'Q4', value: result.selected_sentence }
       ]);
-      console.log(answer)
+      console.log(answer);
     } catch (error) {
       console.error('Error fetching questions:', error);
     }
@@ -85,18 +94,6 @@ function Question() {
       const audioFileUrl = `http://localhost:8000/audio/${newFilename}`;
       setAudioUrl(audioFileUrl);
       setText(data[index].value);
-
-      // Fetch random image if the question key is Q3
-      if (data[index].key === 'Q3') {
-        const imageResponse = await fetch('http://localhost:8000/random-image');
-        if (!imageResponse.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const imageBlob = await imageResponse.blob();
-        setImageUrl(URL.createObjectURL(imageBlob));
-      } else {
-        setImageUrl('');
-      }
     } catch (error) {
       console.error('Error generating audio:', error);
     } finally {
@@ -108,7 +105,6 @@ function Question() {
   const handleNext = () => {
     setAudioUrl('');
     setText('');
-    setImageUrl('');
     setCurrentIndex((prevIndex) => {
       const newIndex = (prevIndex + 1) % data.length;
       fetchAudio(newIndex);
@@ -139,10 +135,10 @@ function Question() {
         </div>
       )}
 
-      {imageUrl && (
+      {text === '사진 속 물체의 이름은 무엇인가요?' && imageUrl && (
         <div>
-          <h3>Random Image:</h3>
-          <img src={imageUrl} alt="Random" style={{ maxWidth: '100%', maxHeight: '500px' }} />
+          <h3>Image:</h3>
+          <img src={imageUrl} alt="Selected" style={{ width: '300px', height: 'auto' }} />
         </div>
       )}
 
