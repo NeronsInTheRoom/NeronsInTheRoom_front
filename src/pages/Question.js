@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Recorder from 'recorder-js';
 
 function Question() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -14,6 +15,10 @@ function Question() {
   const [answer, setAnswer] = useState([]);
   const [imageUrl, setImageUrl] = useState('');
   const navigate = useNavigate();
+  const [isRecording, setIsRecording] = useState(false);
+  const [recorder, setRecorder] = useState(null);
+  const [totalScore, setTotalScore] = useState(0);
+  const audioContextRef = useRef(null);
 
   // Fetch the initial data from the backend
   const fetchData = async () => {
@@ -37,7 +42,7 @@ function Question() {
         setMonth(q2Data.month);
         setWeekday(q2Data.weekday);
       }
-      
+
       // Set the image URL if there is a selected image
       if (q3Data && q3Data.image_filename) {
         setImageUrl(`http://localhost:8000/image/${q3Data.image_filename}`);
@@ -116,7 +121,81 @@ function Question() {
 
   // Handle the "Complete" button click
   const handleComplete = () => {
-    navigate('/complete');
+    const total_score = totalScore / 4; // 4번의 질문 평균 계산
+    navigate('/complete', { state: total_score });
+    setTotalScore(0); // 점수 초기화
+  };
+
+  // Start recording
+  const startRecording = async () => {
+    setIsRecording(true);
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const audioContext = audioContextRef.current;
+    const rec = new Recorder(audioContext);
+
+    rec.init(stream).then(() => {
+      setRecorder(rec);
+      rec.start();
+    }).catch((error) => {
+      console.error("Error initializing recorder:", error);
+      setIsRecording(false);
+    });
+  };
+
+  // Stop recording and send to server
+  const stopRecording = async () => {
+    if (recorder) {
+      setIsRecording(false);
+      try {
+        const { blob } = await recorder.stop();
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+        sendAudioToServer(blob, currentIndex + 1);
+      } catch (error) {
+        console.error("Error stopping recording:", error);
+      }
+    }
+  };
+
+  // Send audio file and answer to the server
+  const sendAudioToServer = async (audioBlob) => {
+    const formData = new FormData();
+    const questionKey = data[currentIndex].key;  // 현재 질문의 key 값
+
+    const getValueForKey = (key) => {
+      const foundItem = answer.find(item => item.key === key);
+      return foundItem ? foundItem.value : null;
+    };
+    const value = getValueForKey(questionKey);
+
+    formData.append("file", audioBlob, `${questionKey}.wav`);
+    formData.append("answer", value);
+
+    try {
+      const response = await fetch(`http://localhost:8000/${questionKey}`, {
+        method: "POST",
+        body: formData,
+        mode: 'cors',
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const score = data.score; 
+        setTotalScore(totalScore + score); 
+        console.log("File uploaded successfully");
+        console.log("Server response:", data);
+      } else {
+        console.error("Failed to upload file");
+        const errorData = await response.json();
+        console.error("Error details:", errorData);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
   // Function to convert text with line breaks to HTML
@@ -136,11 +215,11 @@ function Question() {
 
         {data.length > 0 ? (
           currentIndex < data.length - 1 ? (
-            isLoading ? ('Loading...') : 
-            (<button onClick={handleNext} disabled={isLoading} className="el_btn el_btnL el_btn__blue hp_mt100 hp_wd100">다음</button>)
+            isLoading ? ('Loading...') :
+              (<button onClick={handleNext} disabled={isLoading} className="el_btn el_btnL el_btn__blue hp_mt100 hp_wd100">다음</button>)
           ) : (
             isLoading ? ('Loading...') : (
-            <button onClick={handleComplete} disabled={isLoading} className="el_btn el_btnL el_btn__blue hp_mt100 hp_wd100">완료</button>)
+              <button onClick={handleComplete} disabled={isLoading} className="el_btn el_btnL el_btn__blue hp_mt100 hp_wd100">완료</button>)
           )
         ) : (
           <p>Loading data...</p> // 데이터 로딩 중 표시할 메시지
@@ -162,6 +241,11 @@ function Question() {
             <li key={item.key}>{`${item.key}: ${item.value}`}</li>
           ))}
         </ul>
+        <div>
+          <button onClick={isRecording ? stopRecording : startRecording}>
+            {isRecording ? "녹음 중지" : "녹음 시작"}
+          </button>
+        </div>
       </div>
     </div>
   );
