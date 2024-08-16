@@ -1,11 +1,6 @@
 import React from "react";
-import { useLocation } from 'react-router-dom';
 
 function Complete() {
-  const location = useLocation();
-  const averageScore = location.state
-
-  console.log(averageScore)
   return (
     <div className="ly_all hp_f2Back hp_pt80">
       <div className="ly_wrap">

@@ -118,8 +118,8 @@ function Question() {
 
   // Handle the "Complete" button click
   const handleComplete = () => {
-    const averageScore = totalScore / 4; // 4번의 질문 평균 계산
-    navigate('/complete', { state: averageScore });
+    const total_score = totalScore / 4; // 4번의 질문 평균 계산
+    navigate('/complete', { state: total_score });
     setTotalScore(0); // 점수 초기화
   };
 
