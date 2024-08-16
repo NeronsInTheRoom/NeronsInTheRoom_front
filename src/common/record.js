@@ -1,46 +1,52 @@
 import React, { useState, useRef } from "react";
+import Recorder from 'recorder-js';
 
 function AudioRecorder() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState("");
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
+  const [recorder, setRecorder] = useState(null);
+  const audioContextRef = useRef(null);
 
   const startRecording = async () => {
     setIsRecording(true);
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    }
     
-    // MIME 타입을 'audio/webm'으로 설정
-    mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-  
-    mediaRecorderRef.current.ondataavailable = (event) => {
-      audioChunksRef.current.push(event.data);
-    };
-  
-    mediaRecorderRef.current.onstop = () => {
-      // 'audio/webm'으로 생성된 Blob
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-      const url = URL.createObjectURL(audioBlob);
-      setAudioURL(url);
-      audioChunksRef.current = [];
-      sendAudioToServer(audioBlob); // 녹음이 완료되면 서버로 전송
-    };
-  
-    mediaRecorderRef.current.start();
-  };
-  
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const audioContext = audioContextRef.current;
+    const rec = new Recorder(audioContext);
 
-  const stopRecording = () => {
-    setIsRecording(false);
-    mediaRecorderRef.current.stop();
+    rec.init(stream).then(() => {
+      setRecorder(rec);
+      rec.start();
+    }).catch((error) => {
+      console.error("Error initializing recorder:", error);
+      setIsRecording(false);
+    });
+  };
+
+  const stopRecording = async () => {
+    if (recorder) {
+      setIsRecording(false);
+      try {
+        const { blob } = await recorder.stop();
+        const url = URL.createObjectURL(blob);
+        setAudioURL(url);
+        // 서버로 전송
+        sendAudioToServer(blob);
+      } catch (error) {
+        console.error("Error stopping recording:", error);
+      }
+    }
   };
 
   const sendAudioToServer = async (audioBlob) => {
     const formData = new FormData();
-    formData.append("file", audioBlob, "recording.webm");
+    formData.append("file", audioBlob, "recording.wav"); // WAV 파일명
 
     try {
-      const response = await fetch("http://localhost:8000/uploadfile/", {  
+      const response = await fetch("http://localhost:8000/uploadfile/", {
         method: "POST",
         body: formData,
         mode: 'cors',
@@ -58,18 +64,17 @@ function AudioRecorder() {
     } catch (error) {
       console.error("Error:", error);
     }
-};
-
+  };
 
   return (
     <div>
       <button onClick={isRecording ? stopRecording : startRecording}>
-        {isRecording ? "Stop Recording" : "Start Recording"}
+        {isRecording ? "녹음 중지" : "녹음 시작"}
       </button>
       {audioURL && (
         <audio controls>
           <source src={audioURL} type="audio/wav" />
-          Your browser does not support the audio element.
+          브라우저가 오디오 요소를 지원하지 않습니다.
         </audio>
       )}
     </div>
