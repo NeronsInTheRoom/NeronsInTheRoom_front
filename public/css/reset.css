@@ -1,0 +1,39 @@
+@charset "UTF-8";
+@import url("font.css");
+html, body, div, span, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, abbr, address, cite, code, del, dfn, em, img, ins, kbd, q, samp, small, strong, sub, sup, var, b, i, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, figcaption, figure, footer, header, hgroup, menu, nav, section, summary, time, mark, audio, video{margin:0;padding:0;border:0;outline:0;font-size:100%;background:transparent;}
+article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block;}
+nav ul{list-style:none;}
+blockquote, q{quotes:none;}
+blockquote:before, blockquote:after,q:before, q:after{content:'';content:none;}
+a{margin:0;padding:0;background:transparent;}
+ins{background-color:#ff9;color:#000;text-decoration:none;}
+mark{background-color:#ff9;color:#000; font-style:italic;font-weight:bold;}
+del{text-decoration: line-through;}
+abbr[title], dfn[title]{border-bottom:1px dotted;cursor:help;}
+table{border-collapse:collapse;border-spacing:0;}
+hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0;}
+input,select{vertical-align:middle;background:#fff;}
+select::-ms-expand{border:none;background:none;}
+/*추가*/
+*{box-sizing:border-box;word-break:keep-all;}
+body{line-height:1.5;letter-spacing:-0.031rem;font-size:0.875rem;}
+br{font-family:none!important;}
+a,button{text-decoration:none;word-break:keep-all;background:none;border:none;padding:0;max-width:100%;transition:.25s;color:inherit;cursor:pointer;}
+input[type=button],input[type=submit]{cursor:pointer;}
+img{max-width:100%;vertical-align:top;}
+ul,ol,li{list-style:none;}
+table{width:100%;}
+iframe{display:block;}
+article{width:100%;}
+input, select{padding:0 10px;min-height:34px;background:#fff;border:1px solid #E1E1E1;border-radius:5px;}
+input:disabled{cursor:default;}
+input:focus:not(input[type=button],input[type=submit]),textarea:focus{outline:none;background-color:rgb(232, 240, 254);}
+/* input[type=date],.el_datepicker{background:url("/img/icon/calendar.png")no-repeat 92% center/23px;}
+input[type=date]::-webkit-calendar-picker-indicator{opacity:0;z-index:1;cursor:pointer;} */
+textarea{resize:none;width:100%;min-height:80px;font-size:14px;border:1px solid #E1E1E1;padding:10px;border-radius:5px;}
+::placeholder, ::-ms-input-placeholder{color:#9F9F9F;font-weight:300;opacity:1;}
+:-ms-input-placeholder{color:#9F9F9F!important;font-weight:300;}
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+/* Firefox */
+input[type=number]{-moz-appearance:textfield;}
