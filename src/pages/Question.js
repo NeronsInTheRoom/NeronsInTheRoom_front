@@ -18,7 +18,10 @@ function Question() {
   // Fetch the initial data from the backend
   const fetchData = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/questions');
+      const response = await fetch('http://localhost:8000/questions', {
+        mode: 'cors',
+        credentials: 'include',
+      });
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
