@@ -165,10 +165,11 @@ function Question() {
   const sendAudioToServer = async (audioBlob) => {
     const formData = new FormData();
     const questionKey = data[currentIndex].key;  // 현재 질문의 key 값
-
+    
     const getValueForKey = (key) => {
       const foundItem = answer.find(item => item.key === key);
-      return foundItem ? foundItem.value : null;
+      const memorizedItem = answer.find(item => item.key === 'Q1' )
+      return foundItem ? foundItem.value : memorizedItem.value;
     };
     const value = getValueForKey(questionKey);
 
@@ -184,8 +185,11 @@ function Question() {
       });
       if (response.ok) {
         const data = await response.json();
+        console.log(data)
+        console.log(data.score)
         const score = data.score; 
-        setTotalScore(totalScore + score); 
+        const numericScore = parseFloat(score) || 0;
+        setTotalScore(totalScore + numericScore); 
         console.log("File uploaded successfully");
         console.log("Server response:", data);
       } else {
@@ -240,6 +244,7 @@ function Question() {
           {answer.map((item) => (
             <li key={item.key}>{`${item.key}: ${item.value}`}</li>
           ))}
+          <li>{`점수: ${totalScore}`}</li>
         </ul>
         <div>
           <button onClick={isRecording ? stopRecording : startRecording}>
