@@ -12,6 +12,7 @@
     "react-router-dom": "^6.26.0",
     "react-scripts": "5.0.1",
     "react-speech-recognition": "^3.10.0",
+    "recorder-js": "^1.0.7",
     "redux": "^5.0.1",
     "redux-actions": "^3.0.3",
     "redux-logger": "^3.0.6",
