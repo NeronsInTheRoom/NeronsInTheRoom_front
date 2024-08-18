@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Layouts from "./layouts/Layouts";
 import Main from "./pages/Main"
 import Question from "./pages/Question";
+import Question_dj from "./pages/Question_dj";
 import Complete from "./pages/Complete";
 import StartAudio from "./pages/StartAudio";
 import AudioPlayer from "./pages/AudioPlayer";
@@ -16,6 +17,7 @@ function App() {
           </Route> */}
           <Route path="/" element={<Main />}/>
           <Route path="/question" element={<Question />} />
+          <Route path="/question_dj" element={<Question_dj />} />
           <Route path="/complete" element={<Complete />} />
           <Route path="/audioplayer" element={<AudioPlayer />} />
         </Routes>
