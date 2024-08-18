@@ -2,9 +2,12 @@
 .ly_all{min-height:100vh;}
 .ly_wrap{margin:0 auto;max-width:750px;}
 .ly_center{display:flex;justify-content:center;align-items:center;}
+.ly_fSpace{display:flex;justify-content:space-between;}
+.ly_fdColumn{flex-direction:column;}
 
 .bl_listRing>li{list-style:disc;margin-left:22px;}
 
+.hp_ht100{height:100vh!important;}
 .hp_wd100{width:100%!important;}
 .hp_alignC{text-align:center;}
 
@@ -19,9 +22,12 @@
 .hp_777{color: #777!important;}
 
 .el_btn{display:block;border-radius:10px;text-align:center;font-weight:700;font-family:'Pretendard';letter-spacing:1px;}
-.el_btnL{font-size:24px;padding:25px 0;}
+.el_btnL{font-size:20px;padding:20px 0;}
 .el_btn__blue{background-color:#0036af;color:#fff;}
+.el_btn__black{background-color:#000;color:#fff;}
 
+.hp_mt10{margin-top:10px;}
+.hp_mt30{margin-top:30px;}
 .hp_mt50{margin-top:50px;}
 .hp_mt70{margin-top:70px;}
 .hp_mt100{margin-top:100px;}
