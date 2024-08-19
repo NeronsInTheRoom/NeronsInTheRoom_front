@@ -1,7 +1,9 @@
 import React from "react";
+import { useLocation } from 'react-router-dom';
 
-function Complete({total_score}) {
-  total_score = 90;
+function Complete() {
+  const location = useLocation();
+  const { total_score = 0 } = location.state || {}; 
 
   let statusClass = "";
   let statusText = "";

@@ -3,130 +3,237 @@ import { useNavigate } from 'react-router-dom';
 import Recorder from 'recorder-js';
 
 function Question() {
+  const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [audioUrl, setAudioUrl] = useState('');
-  const [text, setText] = useState('');
-  const [filename, setFilename] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState([]);
-  const [selectedWords, setSelectedWords] = useState([]);
-  const [month, setMonth] = useState('');
-  const [weekday, setWeekday] = useState('');
-  const [answer, setAnswer] = useState([]);
-  const [imageUrl, setImageUrl] = useState('');
+  const [audioSrc, setAudioSrc] = useState('');
+  const [randomWords, setRandomWords] = useState('');
+  const [wordAudioSrcs, setWordAudioSrcs] = useState({});
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [randomImageWord, setRandomImageWord] = useState('');
+  const [imageSrc, setImageSrc] = useState('');
+  const [randomSentence, setRandomSentence] = useState('');
+  const [sentenceAudioSrcs, setSentenceAudioSrcs] = useState([]);
+  const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
+  const [answer, setAnswer] = useState({ Q1: '', Q2: '', Q3: '', Q4: '' });
+  const audioRef = useRef(null);
   const navigate = useNavigate();
   const [isRecording, setIsRecording] = useState(false);
   const [recorder, setRecorder] = useState(null);
   const [totalScore, setTotalScore] = useState(0);
   const audioContextRef = useRef(null);
-
-  // Fetch the initial data from the backend
-  const fetchData = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/questions', {
-        mode: 'cors',
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const result = await response.json();
-      setData(result.questions);
-      setSelectedWords(result.selected_words);
-      setText(result.questions[0].value); // Display the initial value
-      setFilename(`${result.questions[0].key}.wav`);
-
-      const q2Data = result.questions.find(q => q.key === 'Q2');
-      const q3Data = result.questions.find(q => q.key === 'Q3');
-      if (q2Data) {
-        setMonth(q2Data.month);
-        setWeekday(q2Data.weekday);
-      }
-
-      // Set the image URL if there is a selected image
-      if (q3Data && q3Data.image_filename) {
-        setImageUrl(`http://localhost:8000/image/${q3Data.image_filename}`);
-      } else {
-        setImageUrl('');
-      }
-
-      setAnswer([
-        { key: 'Q1', value: result.selected_words.join(", ") },
-        { key: 'Q2', value: `${q2Data.month}, ${q2Data.weekday}` },
-        { key: 'Q3', value: q3Data ? result.image_name || '이미지 없음' : '이미지 없음' },
-        { key: 'Q4', value: result.selected_sentence }
-      ]);
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-    }
-  };
+  const [audioUrl, setAudioUrl] = useState('');
+  const [data, setData] = useState([]);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false); // 추가된 상태 변수
 
   useEffect(() => {
-    fetchData();
+    async function fetchQuestions() {
+      try {
+        const response = await fetch('http://localhost:8000/questions');
+        const data = await response.json();
+        setQuestions(data);
+        setData(data);
+
+        const savedIndex = localStorage.getItem('currentIndex');
+        if (data.length > 0) {
+          localStorage.removeItem('currentIndex');
+          setCurrentIndex(0);
+          fetchAudio(data[0].key);
+        }
+      } catch (error) {
+        console.error('질문 데이터를 가져오는 중 오류 발생:', error);
+      }
+    }
+
+    fetchQuestions();
   }, []);
 
   useEffect(() => {
-    if (data.length > 0) {
-      fetchAudio(currentIndex);
-    }
-  }, [currentIndex, data]);
-
-  // Fetch audio file based on index
-  const fetchAudio = async (index) => {
-    const { key, audio_text } = data[index];
-    const textToSpeak = (key === 'Q4' || key === 'Q1') && audio_text
-      ? audio_text
-      : data[index].value;
-
-    const newFilename = `${key}.wav`;
-    setFilename(newFilename);
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('http://localhost:8000/ttsmodule', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          text: textToSpeak,
-          filename: newFilename,
-        }),
+    if (audioSrc && audioRef.current) {
+      setIsAudioPlaying(true); // 오디오 재생 시작
+      audioRef.current.play().catch(error => {
+        console.error('오디오 재생 오류:', error);
       });
+    }
+  }, [audioSrc]);
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+  useEffect(() => {
+    const handleEnded = () => {
+      setIsAudioPlaying(false); // 오디오 재생 완료
+      if (questions[currentIndex].key === 'Q1') {
+        if (currentWordIndex < Object.keys(wordAudioSrcs).length) {
+          const nextKey = Object.keys(wordAudioSrcs)[currentWordIndex];
+          const nextAudioURL = wordAudioSrcs[nextKey];
+          setAudioSrc(nextAudioURL);
+          setCurrentWordIndex(prevIndex => prevIndex + 1);
+        }
+      } else if (questions[currentIndex].key === 'Q4') {
+        if (currentSentenceIndex < sentenceAudioSrcs.length) {
+          const nextAudioURL = sentenceAudioSrcs[currentSentenceIndex];
+          setAudioSrc(nextAudioURL);
+          setCurrentSentenceIndex(prevIndex => prevIndex + 1);
+        }
+      }
+    };
+
+    const audioElement = audioRef.current;
+    if (audioElement) {
+      audioElement.addEventListener('ended', handleEnded);
+      return () => {
+        audioElement.removeEventListener('ended', handleEnded);
+      };
+    }
+  }, [currentWordIndex, wordAudioSrcs, currentSentenceIndex, sentenceAudioSrcs, questions, currentIndex]);
+
+  useEffect(() => {
+    if (questions.length > 0 && questions[currentIndex].key === 'Q1') {
+      async function fetchRandomWords() {
+        try {
+          const response = await fetch('http://localhost:8000/random-words');
+          if (response.ok) {
+            const data = await response.json();
+            const wordsArray = Object.entries(data);
+            const translations = wordsArray.map(([key, translation]) => translation).join(', ');
+            setRandomWords(translations);
+
+            const audioUrls = {};
+            for (const [key] of wordsArray) {
+              const audioResponse = await fetch(`http://localhost:8000/audio/word/${key}`);
+              if (audioResponse.ok) {
+                const audioURL = URL.createObjectURL(await audioResponse.blob());
+                audioUrls[key] = audioURL;
+              } else {
+                console.error(`단어 ${key}의 오디오 파일을 가져오는 중 오류 발생:`, audioResponse.statusText);
+              }
+            }
+            setWordAudioSrcs(audioUrls);
+            setCurrentWordIndex(0);
+
+            setAnswer(prevAnswer => ({ ...prevAnswer, Q1: translations }));
+          } else {
+            console.error('랜덤 단어를 가져오는 중 오류 발생:', response.statusText);
+          }
+        } catch (error) {
+          console.error('랜덤 단어를 가져오는 중 오류 발생:', error);
+        }
       }
 
-      const audioFileUrl = `http://localhost:8000/audio/${newFilename}`;
-      setAudioUrl(audioFileUrl);
-      setText(data[index].value);
+      fetchRandomWords();
+    } else {
+      setRandomWords('');
+      setWordAudioSrcs({});
+      setCurrentWordIndex(0);
+    }
+  }, [currentIndex, questions]);
+
+  useEffect(() => {
+    if (questions.length > 0 && questions[currentIndex].key === 'Q3') {
+      async function fetchRandomImageWord() {
+        try {
+          const response = await fetch('http://localhost:8000/random-image-word');
+          if (response.ok) {
+            const data = await response.json();
+            const imageKey = Object.keys(data)[0];
+            setRandomImageWord(data[imageKey]);
+
+            const imageResponse = await fetch(`http://localhost:8000/image/${imageKey}`);
+            if (imageResponse.ok) {
+              const imageURL = URL.createObjectURL(await imageResponse.blob());
+              setImageSrc(imageURL);
+            } else {
+              console.error('이미지 파일을 가져오는 중 오류 발생:', imageResponse.statusText);
+            }
+
+            setAnswer(prevAnswer => ({ ...prevAnswer, Q3: data[imageKey] }));
+          } else {
+            console.error('랜덤 이미지 단어를 가져오는 중 오류 발생:', response.statusText);
+          }
+        } catch (error) {
+          console.error('랜덤 이미지 단어를 가져오는 중 오류 발생:', error);
+        }
+      }
+
+      fetchRandomImageWord();
+    } else {
+      setRandomImageWord('');
+      setImageSrc('');
+    }
+  }, [currentIndex, questions]);
+
+  useEffect(() => {
+    if (questions.length > 0 && questions[currentIndex].key === 'Q4') {
+      async function fetchRandomSentence() {
+        try {
+          const response = await fetch('http://localhost:8000/random-sentence');
+          if (response.ok) {
+            const data = await response.json();
+            setRandomSentence(data.value);
+
+            const audioResponse = await fetch(`http://localhost:8000/audio/sentence/${data.key}`);
+            if (audioResponse.ok) {
+              const audioURL = URL.createObjectURL(await audioResponse.blob());
+              setSentenceAudioSrcs([audioURL]);
+              setCurrentSentenceIndex(0);
+
+              setAnswer(prevAnswer => ({ ...prevAnswer, Q4: data.value }));
+            } else {
+              console.error('문장 오디오 파일을 가져오는 중 오류 발생:', audioResponse.statusText);
+            }
+          } else {
+            console.error('랜덤 문장을 가져오는 중 오류 발생:', response.statusText);
+          }
+        } catch (error) {
+          console.error('랜덤 문장을 가져오는 중 오류 발생:', error);
+        }
+      }
+
+      fetchRandomSentence();
+    } else {
+      setRandomSentence('');
+      setSentenceAudioSrcs([]);
+      setCurrentSentenceIndex(0);
+    }
+  }, [currentIndex, questions]);
+
+  useEffect(() => {
+    if (questions.length > 0 && questions[currentIndex].key === 'Q2') {
+      const today = new Date();
+      const month = today.toLocaleString('default', { month: 'long' });
+      const day = today.toLocaleDateString('ko-KR', { weekday: 'long' });
+      const dateValue = `${month}, ${day}`;
+
+      setAnswer(prevAnswer => ({ ...prevAnswer, Q2: dateValue }));
+    }
+  }, [currentIndex, questions]);
+
+  const fetchAudio = async (key) => {
+    try {
+      const audioResponse = await fetch(`http://localhost:8000/audio/${key}`);
+      if (audioResponse.ok) {
+        const audioURL = URL.createObjectURL(await audioResponse.blob());
+        setAudioSrc(audioURL);
+      } else {
+        console.error('오디오 파일을 가져오는 중 오류 발생:', audioResponse.statusText);
+      }
     } catch (error) {
-      console.error('Error generating audio:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('오디오 파일을 가져오는 중 오류 발생:', error);
     }
   };
 
-  // Handle the "Next" button click
-  const handleNext = () => {
-    setAudioUrl('');
-    setText('');
-    setCurrentIndex((prevIndex) => {
-      const newIndex = (prevIndex + 1) % data.length;
-      fetchAudio(newIndex);
-      return newIndex;
-    });
+  const handleNextQuestion = () => {
+    const newIndex = currentIndex + 1;
+    if (newIndex < questions.length) {
+      setAudioUrl('');
+      setCurrentIndex(newIndex);
+      localStorage.setItem('currentIndex', newIndex);
+      fetchAudio(questions[newIndex].key);
+    } else {
+      localStorage.removeItem('currentIndex');
+      const total_score = totalScore / 4;
+      navigate('/complete', { state: { total_score: totalScore } }); // 상태 전달
+      setTotalScore(0);
+    }
   };
 
-  // Handle the "Complete" button click
-  const handleComplete = () => {
-    const total_score = totalScore / 4; // 4번의 질문 평균 계산
-    navigate('/complete', { state: total_score });
-    setTotalScore(0); // 점수 초기화
-  };
-
-  // Start recording
   const startRecording = async () => {
     setIsRecording(true);
     if (!audioContextRef.current) {
@@ -146,7 +253,6 @@ function Question() {
     });
   };
 
-  // Stop recording and send to server
   const stopRecording = async () => {
     if (recorder) {
       setIsRecording(false);
@@ -154,30 +260,29 @@ function Question() {
         const { blob } = await recorder.stop();
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
-        sendAudioToServer(blob, currentIndex + 1);
+        await sendAudioToServer(blob);
       } catch (error) {
         console.error("Error stopping recording:", error);
       }
     }
   };
 
-  // Send audio file and answer to the server
   const sendAudioToServer = async (audioBlob) => {
     const formData = new FormData();
-    const questionKey = data[currentIndex].key;  // 현재 질문의 key 값
+    const question = questions[currentIndex];
     
-    const getValueForKey = (key) => {
-      const foundItem = answer.find(item => item.key === key);
-      const memorizedItem = answer.find(item => item.key === 'Q1' )
-      return foundItem ? foundItem.value : memorizedItem.value;
-    };
-    const value = getValueForKey(questionKey);
+    if (!question) {
+      console.error('Current question is undefined');
+      return;
+    }
 
-    formData.append("file", audioBlob, `${questionKey}.wav`);
+    const value = answer[question.key] || '';
+
+    formData.append("file", audioBlob, `${question.key}.wav`);
     formData.append("answer", value);
 
     try {
-      const response = await fetch(`http://localhost:8000/${questionKey}`, {
+      const response = await fetch(`http://localhost:8000/${question.key}`, {
         method: "POST",
         body: formData,
         mode: 'cors',
@@ -185,11 +290,9 @@ function Question() {
       });
       if (response.ok) {
         const data = await response.json();
-        console.log(data)
-        console.log(data.score)
-        const score = data.score; 
+        const score = data.score;
         const numericScore = parseFloat(score) || 0;
-        setTotalScore(totalScore + numericScore); 
+        setTotalScore(totalScore + numericScore);
         console.log("File uploaded successfully");
         console.log("Server response:", data);
       } else {
@@ -209,48 +312,58 @@ function Question() {
   };
 
   return (
-    <div className="ly_all hp_padding20 hp_pt80">
+    <div className="ly_all">
       <div className="ly_wrap">
-        <div className="el_question" dangerouslySetInnerHTML={{ __html: formatText(text) }}></div>
-
-        {text === '사진 속 \n물체의 이름은 \n무엇인가요?' && imageUrl && (
-          <img src={imageUrl} alt="Selected" style={{ width: '300px', height: 'auto' }} />
-        )}
-
-        {data.length > 0 ? (
-          currentIndex < data.length - 1 ? (
-            isLoading ? ('Loading...') :
-              (<button onClick={handleNext} disabled={isLoading} className="el_btn el_btnL el_btn__blue hp_mt100 hp_wd100">다음</button>)
-          ) : (
-            isLoading ? ('Loading...') : (
-              <button onClick={handleComplete} disabled={isLoading} className="el_btn el_btnL el_btn__blue hp_mt100 hp_wd100">완료</button>)
-          )
-        ) : (
-          <p>Loading data...</p> // 데이터 로딩 중 표시할 메시지
-        )}
-
-        {isLoading && <p>Generating audio...</p>}
-
-        {audioUrl && !isLoading && (
-          <div>
-            <h3>Generated Audio:</h3>
-            <audio key={audioUrl} controls autoPlay>
-              <source src={audioUrl} type="audio/wav" />
-              Your browser does not support the audio element.
-            </audio>
+        {questions.length > 0 ? (
+          <div className="ly_fSpace ly_fdColumn hp_padding20 hp_pt80 hp_ht100">
+            <div className="">
+              <div className="el_question" dangerouslySetInnerHTML={{ __html: formatText(questions[currentIndex].value) }}></div>
+              {audioSrc && (
+                <audio
+                  ref={audioRef}
+                  controls
+                  src={audioSrc}
+                  style={{ display: 'none' }} // 오디오 플레이어 숨기기
+                >
+                  Your browser does not support the audio element.
+                </audio>
+              )}
+              {currentIndex < questions.length && questions[currentIndex].key === 'Q3' && (
+                <div className="random-image-word hp_mt30">
+                  {imageSrc && <img src={imageSrc} alt={randomImageWord} />}
+                </div>
+              )}
+            </div>
+            {/* <div className="answer-summary">
+              <p><strong>Q1:</strong> {answer.Q1}</p>
+              <p><strong>Q2:</strong> {answer.Q2}</p>
+              <p><strong>Q3:</strong> {answer.Q3}</p>
+              <p><strong>Q4:</strong> {answer.Q4}</p>
+            </div>
+            <div>{`점수: ${totalScore}`}</div> */}
+            <div>
+              {questions[currentIndex].key !== 'Q1' && !isAudioPlaying && (
+                <div>
+                  <button onClick={isRecording ? stopRecording : startRecording} className="el_btn el_btnL el_btn__black hp_wd100">
+                    {isRecording ? "녹음 중지" : "녹음 시작"}
+                  </button>
+                  {audioUrl && (
+                    <audio
+                      controls
+                      src={audioUrl}
+                      style={{ display: 'none' }} // 오디오 플레이어 숨기기
+                    />
+                  )}
+                </div>
+              )}
+              <button onClick={handleNextQuestion} className="el_btn el_btnL el_btn__blue hp_mt10 hp_wd100">
+                {currentIndex < questions.length - 1 ? '다음' : '완료'}
+              </button>
+            </div>
           </div>
+        ) : (
+          <p>질문을 불러오는 중입니다...</p>
         )}
-        <ul>
-          {answer.map((item) => (
-            <li key={item.key}>{`${item.key}: ${item.value}`}</li>
-          ))}
-          <li>{`점수: ${totalScore}`}</li>
-        </ul>
-        <div>
-          <button onClick={isRecording ? stopRecording : startRecording}>
-            {isRecording ? "녹음 중지" : "녹음 시작"}
-          </button>
-        </div>
       </div>
     </div>
   );
