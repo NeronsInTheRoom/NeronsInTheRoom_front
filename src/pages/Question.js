@@ -26,10 +26,17 @@ function Question() {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false); // 추가된 상태 변수
   const [tempScore, setTempScore] = useState(0)
 
+  const baseUrl = 'http://localhost:8000';
+
   useEffect(() => {
     async function fetchQuestions() {
       try {
-        const response = await fetch('http://localhost:8000/questions');
+        const response = await fetch(`${baseUrl}/questions`, {
+          headers: {
+            'Content-Type': `application/json`,
+            'ngrok-skip-browser-warning': '69420',
+          },
+        });
         const data = await response.json();
         setQuestions(data);
         setData(data);
@@ -89,7 +96,12 @@ function Question() {
     if (questions.length > 0 && questions[currentIndex].key === 'Q1') {
       async function fetchRandomWords() {
         try {
-          const response = await fetch('http://localhost:8000/random-words');
+          const response = await fetch(`${baseUrl}/random-words`, {
+            headers: {
+              'Content-Type': `application/json`,
+              'ngrok-skip-browser-warning': '69420',
+            },
+          });
           if (response.ok) {
             const data = await response.json();
             const wordsArray = Object.entries(data);
@@ -98,7 +110,12 @@ function Question() {
 
             const audioUrls = {};
             for (const [key] of wordsArray) {
-              const audioResponse = await fetch(`http://localhost:8000/audio/word/${key}`);
+              const audioResponse = await fetch(`${baseUrl}/audio/word/${key}`, {
+                headers: {
+                  'Content-Type': `application/json`,
+                  'ngrok-skip-browser-warning': '69420',
+                },
+              });
               if (audioResponse.ok) {
                 const audioURL = URL.createObjectURL(await audioResponse.blob());
                 audioUrls[key] = audioURL;
@@ -130,13 +147,23 @@ function Question() {
     if (questions.length > 0 && questions[currentIndex].key === 'Q3') {
       async function fetchRandomImageWord() {
         try {
-          const response = await fetch('http://localhost:8000/random-image-word');
+          const response = await fetch(`${baseUrl}/random-image-word`, {
+            headers: {
+              'Content-Type': `application/json`,
+              'ngrok-skip-browser-warning': '69420',
+            },
+          });
           if (response.ok) {
             const data = await response.json();
             const imageKey = Object.keys(data)[0];
             setRandomImageWord(data[imageKey]);
 
-            const imageResponse = await fetch(`http://localhost:8000/image/${imageKey}`);
+            const imageResponse = await fetch(`${baseUrl}/image/${imageKey}`, {
+              headers: {
+                'Content-Type': `application/json`,
+                'ngrok-skip-browser-warning': '69420',
+              },
+            });
             if (imageResponse.ok) {
               const imageURL = URL.createObjectURL(await imageResponse.blob());
               setImageSrc(imageURL);
@@ -164,12 +191,22 @@ function Question() {
     if (questions.length > 0 && questions[currentIndex].key === 'Q4') {
       async function fetchRandomSentence() {
         try {
-          const response = await fetch('http://localhost:8000/random-sentence');
+          const response = await fetch(`${baseUrl}/random-sentence`, {
+            headers: {
+              'Content-Type': `application/json`,
+              'ngrok-skip-browser-warning': '69420',
+            },
+          });
           if (response.ok) {
             const data = await response.json();
             setRandomSentence(data.value);
 
-            const audioResponse = await fetch(`http://localhost:8000/audio/sentence/${data.key}`);
+            const audioResponse = await fetch(`${baseUrl}/audio/sentence/${data.key}`, {
+              headers: {
+                'Content-Type': `application/json`,
+                'ngrok-skip-browser-warning': '69420',
+              },
+            });
             if (audioResponse.ok) {
               const audioURL = URL.createObjectURL(await audioResponse.blob());
               setSentenceAudioSrcs([audioURL]);
@@ -208,7 +245,12 @@ function Question() {
 
   const fetchAudio = async (key) => {
     try {
-      const audioResponse = await fetch(`http://localhost:8000/audio/${key}`);
+      const audioResponse = await fetch(`${baseUrl}/audio/${key}`, {
+        headers: {
+          'Content-Type': `application/json`,
+          'ngrok-skip-browser-warning': '69420',
+        },
+      });
       if (audioResponse.ok) {
         const audioURL = URL.createObjectURL(await audioResponse.blob());
         setAudioSrc(audioURL);
@@ -284,7 +326,7 @@ function Question() {
     formData.append("answer", value);
 
     try {
-      const response = await fetch(`http://localhost:8000/${question.key}`, {
+      const response = await fetch(`${baseUrl}/${question.key}`, {
         method: "POST",
         body: formData,
         mode: 'cors',
