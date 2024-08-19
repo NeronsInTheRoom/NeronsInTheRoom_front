@@ -228,8 +228,8 @@ function Question() {
       fetchAudio(questions[newIndex].key);
     } else {
       localStorage.removeItem('currentIndex');
-      const total_score = totalScore / 4;
-      navigate('/complete', { state: { total_score: totalScore } }); // 상태 전달
+      const total_score = Math.round((totalScore / 4) * 100);
+      navigate('/complete', { state: { total_score: total_score } }); // 상태 전달
       setTotalScore(0);
     }
   };
