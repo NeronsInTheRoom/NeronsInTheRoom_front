@@ -24,6 +24,7 @@ function Question() {
   const [audioUrl, setAudioUrl] = useState('');
   const [data, setData] = useState([]);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false); // 추가된 상태 변수
+  const [tempScore, setTempScore] = useState(0)
 
   useEffect(() => {
     async function fetchQuestions() {
@@ -226,9 +227,10 @@ function Question() {
       setCurrentIndex(newIndex);
       localStorage.setItem('currentIndex', newIndex);
       fetchAudio(questions[newIndex].key);
+      setTotalScore(prev => prev + tempScore);
     } else {
       localStorage.removeItem('currentIndex');
-      const total_score = Math.round((totalScore / 4) * 100);
+      const total_score = Math.round((totalScore + tempScore) / 6 * 100);
       navigate('/complete', { state: { total_score: total_score } }); // 상태 전달
       setTotalScore(0);
     }
@@ -292,7 +294,8 @@ function Question() {
         const data = await response.json();
         const score = data.score;
         const numericScore = parseFloat(score) || 0;
-        setTotalScore(totalScore + numericScore);
+        setTempScore(numericScore);
+        // setTotalScore(totalScore + numericScore);
         console.log("File uploaded successfully");
         console.log("Server response:", data);
       } else {
