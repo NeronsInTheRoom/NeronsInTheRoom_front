@@ -276,7 +276,7 @@ function Question() {
       return;
     }
 
-    const value = answer[question.key] || '';
+    const value = answer[question.key] || answer['Q1'];
 
     formData.append("file", audioBlob, `${question.key}.wav`);
     formData.append("answer", value);
