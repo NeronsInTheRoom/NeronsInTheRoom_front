@@ -24,6 +24,7 @@
 .el_btn{display:block;border-radius:10px;text-align:center;font-weight:700;font-family:'Pretendard';letter-spacing:1px;}
 .el_btnL{font-size:20px;padding:20px 0;}
 .el_btn__blue{background-color:#0036af;color:#fff;}
+.el_btn__disable{background-color:#0037af60;color:#fff;}
 .el_btn__black{background-color:#000;color:#fff;}
 
 .hp_mt10{margin-top:10px;}

@@ -24,7 +24,8 @@ function Question() {
   const [audioUrl, setAudioUrl] = useState('');
   const [data, setData] = useState([]);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false); // 추가된 상태 변수
-  const [tempScore, setTempScore] = useState(0)
+  const [tempScore, setTempScore] = useState(1)
+  const [isReceived, setIsReceived] = useState(true);
 
   const baseUrl = 'http://localhost:8000';
 
@@ -269,12 +270,16 @@ function Question() {
       setCurrentIndex(newIndex);
       localStorage.setItem('currentIndex', newIndex);
       fetchAudio(questions[newIndex].key);
-      setTotalScore(prev => prev + tempScore);
+      setTotalScore(prev => prev + tempScore)
+      setTempScore(0);
+      setIsReceived(false);
     } else {
       localStorage.removeItem('currentIndex');
       const total_score = Math.round((totalScore + tempScore) / 6 * 100);
       navigate('/complete', { state: { total_score: total_score } }); // 상태 전달
       setTotalScore(0);
+      setTempScore(0);
+      setIsReceived(true);
     }
   };
 
@@ -337,6 +342,7 @@ function Question() {
         const score = data.score;
         const numericScore = parseFloat(score) || 0;
         setTempScore(numericScore);
+        setIsReceived(true);
         // setTotalScore(totalScore + numericScore);
         console.log("File uploaded successfully");
         console.log("Server response:", data);
@@ -401,7 +407,7 @@ function Question() {
                   )}
                 </div>
               )}
-              <button onClick={handleNextQuestion} className="el_btn el_btnL el_btn__blue hp_mt10 hp_wd100">
+              <button onClick={handleNextQuestion} className={!isReceived ? "el_btn el_btnL el_btn__disable hp_mt10 hp_wd100" : "el_btn el_btnL el_btn__blue hp_mt10 hp_wd100"} disabled={!isReceived}>
                 {currentIndex < questions.length - 1 ? '다음' : '완료'}
               </button>
             </div>
