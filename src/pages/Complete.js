@@ -1,42 +1,12 @@
-import React from "react";
-import { useLocation } from 'react-router-dom';
-
 function Complete() {
-  const location = useLocation();
-  const { total_score = 0 } = location.state || {}; 
-
-  let statusClass = "";
-  let statusText = "";
-  let description = "";
-
-  if (total_score >= 80) {
-    statusClass = "el_mark__safety";
-    statusText = "안전";
-    description = "건강한 뇌를 가지셨군요! \n지금의 상태를 잘 유지하세요.";
-  } else if (total_score < 30) {
-    statusClass = "el_mark__hazard";
-    statusText = "위험";
-    description = "직접 병원에 방문하여 \n검진을 받아보시길 권장드립니다.";
-  } else {
-    statusClass = "el_mark__warning";
-    statusText = "주의";
-    description = "안전한 상태는 아니므로 \n일상에서도 평소 상태를 잘 관찰해주세요.";
-  }
-
   return (
     <div className="ly_all hp_f2Back">
       <div className="ly_wrap">
         <div className="hp_fBack hp_padding20">
           <div className="hp_alignC">
-            <div className={`ly_center el_mark ${statusClass}`}>{statusText}</div>
-            <div className="el_correctNum">{total_score}점</div>
+            <div className={`ly_center el_mark`}></div>
+            <div className="el_correctNum">점</div>
             <div className="el_txt">
-              {description.split("\n").map((line, index) => (
-                <React.Fragment key={index}>
-                  {line}
-                  <br />
-                </React.Fragment>
-              ))}
             </div>
           </div>
           <a className="el_btn el_btnL el_btn__blue hp_mt70" href="/">처음으로</a>
