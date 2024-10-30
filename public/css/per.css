@@ -22,12 +22,13 @@
 .hp_777{color: #777!important;}
 
 .el_btn{display:block;border-radius:10px;text-align:center;font-weight:700;font-family:'Pretendard';letter-spacing:1px;}
-.el_btnL{font-size:20px;padding:20px 0;}
+.el_btnL{font-size:20px;padding:18px 0;}
 .el_btn__blue{background-color:#0036af;color:#fff;}
 .el_btn__disable{background-color:#0037af60;color:#fff;}
 .el_btn__black{background-color:#000;color:#fff;}
 
 .hp_mt10{margin-top:10px;}
+.hp_mt15{margin-top:15px;}
 .hp_mt30{margin-top:30px;}
 .hp_mt50{margin-top:50px;}
 .hp_mt70{margin-top:70px;}
@@ -36,9 +37,8 @@
 .hp_pt80{padding-top:80px;}
 
 /* Main */
-.ly_logoWrap{width:230px}
 .el_logo{font-family:'GmarketSans';font-weight:700;font-size:50px;color:#5783ff;}
-.el_logo2{font-family:'GmarketSans';color: #777;font-size:15px;margin-bottom:20px;}
+.el_logo2{font-family:'GmarketSans';color: #777;font-size:18px;margin-bottom:20px;}
 
 /* Question */
 .el_question{font-family:'Pretendard';font-size:36px;line-height:1.2;font-weight:700;}

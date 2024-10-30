@@ -45,10 +45,10 @@
 
 .el_lv1Head{font-size:28px!important;font-weight:700;}
 
-.el_btn{display:block;border-radius:5px;font-size:13px;padding:6px 10px;}
+.el_btn{display:block;border-radius:5px;}
 .el_btnS{border-radius:5px;font-size:13px;padding:6px 10px;}
 .el_btnM{border-radius:5px;font-size:14px;width:120px;height:48px;display:inline-flex;justify-content:center;align-items:center;}
-.el_btnF{border-radius:5px;width:100%;padding:10px 0;}
+.el_btnF{border-radius:5px;width:100%;padding:13px 0;text-align:center;}
 .el_btnblueBack{background:#006CD0;border:1px solid #006CD0;color:#fff;}
 .el_btnredBack{background:#f20000;border:1px solid #d00000;color:#fff;}
 .el_btnblueBord{background:#fff;border:1px solid #006CD0;color:#006CD0;}
@@ -56,7 +56,6 @@
 .el_btn8Bord{background:#fff;border:1px solid #888;color:#888;}
 .el_btn0Back{background:#000;border:1px solid #000;color:#fff;}
 .el_btn0Bord{border:1px solid #000;color:#000;}
-.el_btnLogin{background:#052659;border:1px solid #052659;color:#fff;}
 button:disabled{background-color:#fff;border-color:#888;color:#888;cursor:default;}
 
 .bl_radioBxArea{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;display:inline-block;cursor:pointer;}

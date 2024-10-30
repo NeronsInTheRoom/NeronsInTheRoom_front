@@ -16,7 +16,7 @@ input,select{vertical-align:middle;background:#fff;}
 select::-ms-expand{border:none;background:none;}
 /*추가*/
 *{box-sizing:border-box;word-break:keep-all;}
-body{line-height:1.5;letter-spacing:-0.031rem;font-size:0.875rem;}
+body{line-height:1.2;letter-spacing:-0.031rem;font-size:0.875rem;}
 br{font-family:none!important;}
 a,button{text-decoration:none;word-break:keep-all;background:none;border:none;padding:0;max-width:100%;transition:.25s;color:inherit;cursor:pointer;}
 input[type=button],input[type=submit]{cursor:pointer;}
