@@ -7,6 +7,7 @@ function Main() {
           <b className="hp_darkblue">M</b>emory<br /><b className="hp_darkblue">E</b>xplorer
         </h1>
         <a className="el_btn el_btnL el_btn__blue hp_mt100" href="/question">시작</a>
+        <a className="el_btn el_btnL el_btn__blue hp_mt100" href="/test">테스트</a>
       </div>
     </div>
   )

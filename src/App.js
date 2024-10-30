@@ -4,6 +4,7 @@ import Question from "./pages/Question";
 import Question_dj from "./pages/Question_dj";
 import Complete from "./pages/Complete";
 import AudioPlayer from "./pages/AudioPlayer";
+import Test from "./pages/test";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/question_dj" element={<Question_dj />} />
           <Route path="/complete" element={<Complete />} />
           <Route path="/audioplayer" element={<AudioPlayer />} />
+          <Route path="/test" element={<Test />} />
         </Routes>
       </BrowserRouter>
     </>
