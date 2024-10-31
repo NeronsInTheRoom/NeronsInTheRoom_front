@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 
 // props로 questionNumber와 onScoreUpdate를 받음
-function Recording({ questionNumber, onScoreUpdate }) {
+function Recording({ questionNumber, onScoreUpdate, onAnswerUpdate }) {
     const [isRecording, setIsRecording] = useState(false);
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
@@ -111,8 +111,11 @@ function Recording({ questionNumber, onScoreUpdate }) {
             }
 
             const data = await response.json();
+            // score와 answer 모두 부모 컴포넌트로 전달
             onScoreUpdate(questionNumber, data.score);
-            console.log(data.score)
+            onAnswerUpdate(questionNumber, data.answer);
+            console.log('Score:', data.score);
+            console.log('Answer:', data.answer);
 
         } catch (error) {
             console.error('서버 전송 오류:', error);
