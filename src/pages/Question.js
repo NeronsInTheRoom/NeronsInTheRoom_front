@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Recording from './Recording';
 
 function Question() {
@@ -7,6 +8,10 @@ function Question() {
   const [loading, setLoading] = useState(true);
   const [scores, setScores] = useState({});  // 빈 객체로 초기화
   const [answers, setAnswers] = useState({});
+  const location = useLocation();
+  const { birthDate, place} = location.state || {};
+  console.log("birthDate",birthDate)
+  console.log("place",place)
 
   useEffect(() => {
       const fetchQuestions = async () => {
