@@ -4,6 +4,7 @@ import Recording from './Recording';
 
 function Question() {
   const [questions, setQuestions] = useState([]);
+  const [correctAnswer, setCorrectAnswer] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [scores, setScores] = useState({});  // 빈 객체로 초기화
@@ -12,6 +13,8 @@ function Question() {
   const { birthDate, place} = location.state || {};
   console.log("birthDate",birthDate)
   console.log("place",place)
+  console.log("question",questions)
+  console.log("correctAnswer",correctAnswer)
 
   useEffect(() => {
       const fetchQuestions = async () => {
@@ -22,6 +25,7 @@ function Question() {
               }
               const data = await response.json();
               setQuestions(data.questions);
+              setCorrectAnswer(data.answers);
               
               // answers 초기화 (모든 답변을 null로 초기화)
               const initialAnswers = {};
@@ -52,26 +56,46 @@ function Question() {
   }, [scores, answers]);
 
   const handleNext = () => {
-      const currentQuestion = questions[currentIndex];
-      const currentScore = scores[currentQuestion?.key];
+    const currentQuestion = questions[currentIndex];
+    const currentScore = scores[currentQuestion?.key];
 
-      if (currentIndex < questions.length - 1 && currentQuestion?.key === 'Q5-1' && currentScore === 0) {
-          const nextIndex = questions.findIndex(q => q.key === 'Q6-1');
-          if (nextIndex !== -1) {
-              setScores(prev => ({
-                  ...prev,
-                  'Q5-2': 0
-              }));
-              setAnswers(prev => ({
-                  ...prev,
-                  'A5-2': null
-              }));
-              setCurrentIndex(nextIndex);
-          }
-      } else if (currentIndex < questions.length - 1) {
-          setCurrentIndex(prevIndex => prevIndex + 1);
-      }
-  };
+    if (currentIndex < questions.length - 1) {
+        // Q5-1이 0점일 때의 처리
+        if (currentQuestion?.key === 'Q5' && currentScore === 0) {
+            const nextIndex = questions.findIndex(q => q.key === 'Q6');
+            if (nextIndex !== -1) {
+                setScores(prev => ({
+                    ...prev,
+                    'Q5-1': 0  // Q5-2 자동으로 0점 처리
+                }));
+                setAnswers(prev => ({
+                    ...prev,
+                    'A5-1': null  // Q5-2 답변 null로 설정
+                }));
+                setCurrentIndex(nextIndex);
+            }
+        }
+        // Q6-1이 0점일 때의 처리 추가
+        else if (currentQuestion?.key === 'Q6' && currentScore === 0) {
+            const nextIndex = questions.findIndex(q => q.key === 'Q7');
+            if (nextIndex !== -1) {
+                setScores(prev => ({
+                    ...prev,
+                    'Q6-1': 0  // Q6-2 자동으로 0점 처리
+                }));
+                setAnswers(prev => ({
+                    ...prev,
+                    'A6-1': null  // Q6-2 답변 null로 설정
+                }));
+                setCurrentIndex(nextIndex);
+            }
+        }
+        // 일반적인 경우
+        else {
+            setCurrentIndex(prevIndex => prevIndex + 1);
+        }
+    }
+};
 
   const handleScoreUpdate = (questionNumber, score) => {
       setScores(prev => ({
@@ -104,6 +128,8 @@ function Question() {
   }
 
   const currentQuestionKey = questions[currentIndex]?.key;
+  const currentCorrectAnswer = correctAnswer.find(answer => answer.key === currentQuestionKey)?.value || '';
+
   // 현재 문제의 점수가 실제로 설정되었는지 확인
   const hasCurrentScore = currentQuestionKey in scores;
 
@@ -122,6 +148,7 @@ function Question() {
                   <div className="flex flex-col gap-4">
                       <Recording 
                           questionNumber={currentQuestionKey}
+                          correctAnswer={currentCorrectAnswer}
                           onScoreUpdate={handleScoreUpdate}
                           onAnswerUpdate={handleAnswerUpdate}
                       />
