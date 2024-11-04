@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 
 // props로 questionNumber와 onScoreUpdate를 받음
-function Recording({ questionNumber, correctAnswer, onScoreUpdate, onAnswerUpdate }) {
+function Recording({ questionNumber, correctAnswer, onScoreUpdate, onAnswerUpdate, birthDate, place, imageName }) {
     const [isRecording, setIsRecording] = useState(false);
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
@@ -102,6 +102,17 @@ function Recording({ questionNumber, correctAnswer, onScoreUpdate, onAnswerUpdat
             formData.append('file', audioBlob, 'recording.wav');
             formData.append('correctAnswer', correctAnswer);
 
+            // Q1일 때는 birthDate를, Q3 또는 Q3-1일 때는 place를 추가
+            if (questionNumber === 'Q1' && birthDate) {
+                formData.append('birth_date', birthDate);
+            } else if ((questionNumber === 'Q3' || questionNumber === 'Q3-1') && place) {
+                formData.append('place', place);
+            }
+            // Q8일 때는 imageName 추가
+            if (questionNumber === 'Q8' && imageName) {
+                formData.append('image_name', imageName);
+            }
+
             const response = await fetch(`http://localhost:8000/${questionNumber}`, {
                 method: 'POST',
                 body: formData,
@@ -117,6 +128,10 @@ function Recording({ questionNumber, correctAnswer, onScoreUpdate, onAnswerUpdat
             onAnswerUpdate(questionNumber, data.answer);
             console.log('Score:', data.score);
             console.log('Answer:', data.answer);
+            if (data.correct_answer) {
+                // onCorrectAnswerUpdate(questionNumber, data.correct_answer)
+                console.log('CorrectAnswer:', data.correct_answer);
+            }
 
         } catch (error) {
             console.error('서버 전송 오류:', error);

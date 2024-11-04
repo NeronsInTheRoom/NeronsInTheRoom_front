@@ -15,10 +15,37 @@ function Question() {
     const [Q7AllScores, setQ7AllScores] = useState([]);
     const location = useLocation();
     const { birthDate, place} = location.state || {};
+    const [imageSrc, setImageSrc] = useState(null);
+    const [imageCounter, setImageCounter] = useState(0);
+    const imageNames = ['clock', 'key', 'stamp', 'pencil', 'coin'];
+    const maxImages = imageNames.length;
+    
     console.log("birthDate",birthDate)
     console.log("place",place)
     console.log("failedIndices", failedIndices)
 
+    useEffect(() => {
+        if (questions[currentIndex]?.key === 'Q8' && imageCounter < maxImages) {
+            fetchImage(imageNames[imageCounter]);
+        } else {
+            setImageSrc(null)
+        }
+    }, [questions, currentIndex, imageCounter]);
+
+    const fetchImage = async (itemName) => {
+        try {
+            const res = await fetch(`http://localhost:8000/image/${itemName}`);
+            // console.log(`이미지 경로 확인: ${res.url}`)
+            if (!res.ok) {
+                throw new Error('Failed to fetch image');
+            }
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            setImageSrc(url);
+        } catch (error) {
+            console.error('Error fetching image:', error)
+        }
+    };
     
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -64,6 +91,8 @@ function Question() {
         const currentScore = scores[currentQuestion?.key];
     
         if (currentIndex < questions.length - 1) {
+    
+            // Q5에서 오답일 경우 Q5-1로 이동
             if (currentQuestion?.key === 'Q5' && currentScore === 0) {
                 const nextIndex = questions.findIndex(q => q.key === 'Q6');
                 if (nextIndex !== -1) {
@@ -78,6 +107,8 @@ function Question() {
                     setCurrentIndex(nextIndex);
                 }
             }
+            
+            // Q6에서 오답일 경우 Q6-1로 이동
             else if (currentQuestion?.key === 'Q6' && currentScore === 0) {
                 const nextIndex = questions.findIndex(q => q.key === 'Q7');
                 if (nextIndex !== -1) {
@@ -92,6 +123,8 @@ function Question() {
                     setCurrentIndex(nextIndex);
                 }
             }
+            
+            // Q7에서의 답변을 평가하여 다음으로 이동할 질문을 결정
             else if (currentQuestion?.key === 'Q7') {
                 const lastQ7Scores = Q7AllScores[Q7AllScores.length - 1];
                 if (lastQ7Scores) {
@@ -121,13 +154,30 @@ function Question() {
                     setCurrentIndex(currentIndex + 1);
                 }
             }
+            
+            // Q7의 세부 질문(Q7-1, Q7-2, ...)이 끝난 후 Q8로 이동
             else if (currentQuestion?.key.startsWith('Q7-')) {
-                // Q7-n 문제가 끝나면 바로 Q8로
                 const q8Index = questions.findIndex(q => q.key === 'Q8');
                 if (q8Index !== -1) {
                     setCurrentIndex(q8Index);
                 }
             }
+            
+            // Q8에서 다음 이미지로 이동하거나 다음 질문으로 이동
+            else if (currentQuestion?.key === 'Q8') {
+                // Q8일 경우, 이미지가 남아 있으면 다음 이미지로 이동 후, 모두 표시되었으면 Q8-1로 넘어감
+                if (imageCounter < maxImages - 1) {
+                    // 다음 이미지로 이동
+                    setImageCounter(prevCounter => prevCounter + 1);
+                } else {
+                    // 이미지 순환이 끝나면 다음 질문 이동
+                    setImageCounter(0); // 다음에 다시 Q8로 돌아올 경우를 대비하여 초기화
+                    const q8_1Index = questions.findIndex(q => q.key === 'Q8-1');
+                    setCurrentIndex(q8_1Index !== -1 ? q8_1Index : currentIndex + 1); // Q8-1로 이동
+                }
+            }
+            
+            // 그 외 일반적인 순서로 다음 질문으로 이동
             else {
                 setCurrentIndex(prevIndex => prevIndex + 1);
             }
@@ -252,7 +302,7 @@ function Question() {
                             {getCurrentQuestion()}
                         </div>
                         <div className="random-image-word hp_mt30">
-                            <img src="" alt="" />
+                            {imageSrc && <img src={imageSrc} alt="Question Image" />}
                         </div>
                     </div>
                     <div className="flex flex-col gap-4">
@@ -261,6 +311,9 @@ function Question() {
                             correctAnswer={currentCorrectAnswer}
                             onScoreUpdate={handleScoreUpdate}
                             onAnswerUpdate={handleAnswerUpdate}
+                            birthDate={birthDate}
+                            place={place}
+                            imageName={imageNames[imageCounter]}
                         />
                         
                         {hasCurrentScore && (
