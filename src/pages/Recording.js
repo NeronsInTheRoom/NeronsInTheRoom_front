@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 
 // props로 questionNumber와 onScoreUpdate를 받음
-function Recording({ questionNumber, onScoreUpdate, onAnswerUpdate }) {
+function Recording({ questionNumber, correctAnswer, onScoreUpdate, onAnswerUpdate }) {
     const [isRecording, setIsRecording] = useState(false);
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
@@ -100,6 +100,7 @@ function Recording({ questionNumber, onScoreUpdate, onAnswerUpdate }) {
         try {
             const formData = new FormData();
             formData.append('file', audioBlob, 'recording.wav');
+            formData.append('correctAnswer', correctAnswer);
 
             const response = await fetch(`http://localhost:8000/${questionNumber}`, {
                 method: 'POST',
