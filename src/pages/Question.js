@@ -33,6 +33,22 @@ function Question() {
     const currentQuestionKey = questions[currentIndex]?.key;
     const currentCorrectAnswer = correctAnswer.find(answer => answer.key === currentQuestionKey)?.value || '';
 
+    // 동적 정답 함수
+    const asyncCorrectAnswer = (questionKey, answer) => {
+        setCorrectAnswer(prevCorrectAnswer => {
+            const updatedAnswers = prevCorrectAnswer.map(item =>
+                item.key === questionKey ? { ...item, value: answer } : item
+            );
+            
+            // 만약 해당 questionKey가 존재하지 않으면 새 항목 추가
+            if (!updatedAnswers.find(item => item.key === questionKey)) {
+                updatedAnswers.push({ key: questionKey, value: answer });
+            }
+
+            return updatedAnswers;
+        });
+    };
+
     // 오디오 재생 함수
     const playAudio = async (audioUrl) => {
         return new Promise((resolve, reject) => {
@@ -218,6 +234,22 @@ function Question() {
         }
     
         if (currentIndex < questions.length - 1) {
+            // Q3 처리: 만약 Q3의 점수가 0점이라면 Q3-1로 이동, 아니면 건너뜀
+            if (currentQuestion?.key === 'Q3' && currentScore === 0) {
+                const nextIndex = questions.findIndex(q => q.key === 'Q3-1');
+                if (nextIndex !== -1) {
+                    setCurrentIndex(nextIndex);  // Q3-1로 이동
+                }
+                return;
+            } else if (currentQuestion?.key === 'Q3' && currentScore === 2) {
+                // 2점이면 Q3-1을 건너뜀
+                const nextIndex = questions.findIndex(q => q.key === 'Q4');
+                if (nextIndex !== -1) {
+                    setCurrentIndex(nextIndex);  // 다음 질문으로 이동
+                }
+                return;
+            }
+            
             // Q5 처리
             if (currentQuestion?.key === 'Q5' && currentScore === 0) {
                 const nextIndex = questions.findIndex(q => q.key === 'Q6');
@@ -510,6 +542,7 @@ function Question() {
                             birthDate={birthDate}
                             place={place}
                             imageName={imageNames[imageCounter]}
+                            onAsyncCorrectAnswer={asyncCorrectAnswer}
                         />
                         
                         {hasCurrentScore(currentQuestionKey) && !isPlaying && (
