@@ -168,7 +168,7 @@ function Question() {
             // 결과 페이지로 이동
             navigate('/complete', {
                 state: {
-                    questions: questions,           // 
+                    questions: questions,           // 제출된문제
                     answers: answers,               // 사용자답변
                     correctAnswer: correctAnswer,   // 정답
                     scores: scores,                 // 사용자점수
