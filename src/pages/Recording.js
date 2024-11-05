@@ -1,7 +1,16 @@
 import React, { useState, useRef } from 'react';
 
 // props로 questionNumber와 onScoreUpdate를 받음
-function Recording({ questionNumber, correctAnswer, onScoreUpdate, onAnswerUpdate, birthDate, place, imageName }) {
+function Recording({ 
+    questionNumber,
+    correctAnswer,
+    onScoreUpdate,
+    onAnswerUpdate,
+    birthDate,
+    place,
+    imageName,
+    onAsyncCorrectAnswer
+}) {
     const [isRecording, setIsRecording] = useState(false);
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
@@ -128,9 +137,11 @@ function Recording({ questionNumber, correctAnswer, onScoreUpdate, onAnswerUpdat
             onAnswerUpdate(questionNumber, data.answer);
             console.log('Score:', data.score);
             console.log('Answer:', data.answer);
-            if (data.correct_answer) {
-                // onCorrectAnswerUpdate(questionNumber, data.correct_answer)
-                console.log('CorrectAnswer:', data.correct_answer);
+            console.log(`데이터 확인: ${JSON.stringify(data)}`)
+            const specificQuestions = ['Q1', 'Q2', 'Q3', 'Q3-1'];
+            if (specificQuestions.includes(questionNumber)) {
+                console.log('CorrectAnswer:', data.correctAnswer);
+                onAsyncCorrectAnswer(questionNumber, data.correctAnswer);
             }
 
         } catch (error) {
