@@ -168,11 +168,11 @@ function Question() {
             // 결과 페이지로 이동
             navigate('/complete', {
                 state: {
-                    questions: questions,
-                    answers: answers,
-                    correctAnswer: correctAnswer,
-                    scores: scores,
-                    explanations: explanations 
+                    questions: questions,           // 
+                    answers: answers,               // 사용자답변
+                    correctAnswer: correctAnswer,   // 정답
+                    scores: scores,                 // 사용자점수
+                    explanations: explanations      // 문제풀이
                 }
             });
             return;
