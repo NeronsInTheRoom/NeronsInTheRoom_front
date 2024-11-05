@@ -8,7 +8,8 @@ function Question() {
     const [correctAnswer, setCorrectAnswer] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [scores, setScores] = useState({});  
+    const [scores, setScores] = useState({});
+    const [maxScores, setMaxScores] = useState([])  
     const [answers, setAnswers] = useState({});
     const [explanations, setExplanations] = useState([]);
     const [Q4Attempts, setQ4Attempts] = useState(0);  
@@ -17,6 +18,7 @@ function Question() {
     const [Q7AllScores, setQ7AllScores] = useState([]);
     const [audioFiles, setAudioFiles] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [attemptedQuestions, setAttemptedQuestions] = useState([]);
     const location = useLocation();
     const { birthDate, place} = location.state || {};
     const [imageSrc, setImageSrc] = useState(null);
@@ -27,6 +29,9 @@ function Question() {
     console.log("birthDate",birthDate)
     console.log("place",place)
     console.log("failedIndices", failedIndices)
+
+    const currentQuestionKey = questions[currentIndex]?.key;
+    const currentCorrectAnswer = correctAnswer.find(answer => answer.key === currentQuestionKey)?.value || '';
 
     // 오디오 재생 함수
     const playAudio = async (audioUrl) => {
@@ -85,12 +90,17 @@ function Question() {
         }
     };
 
-    // 현재 질문이 변경될 때마다 오디오 재생
+    // 현재 질문이 변경될 때마다 오디오 재생 및 attemptedQuestions 업데이트
     useEffect(() => {
         if (!questions[currentIndex]) return;
         
         const currentKey = questions[currentIndex].key;
         playAudioSequence(currentKey);
+
+        // 현재 문제를 attemptedQuestions에 추가
+        if (!attemptedQuestions.some(q => q.key === questions[currentIndex].key)) {
+            setAttemptedQuestions(prev => [...prev, questions[currentIndex]]);
+        }
     }, [currentIndex, audioFiles]);
 
     // 데이터 페칭
@@ -104,9 +114,10 @@ function Question() {
                 const data = await response.json();
                 console.log('Fetched data:', data);  // 데이터 로깅
                 setQuestions(data.questions);
-                setCorrectAnswer(data.answers);
+                setCorrectAnswer(data.correctAnswer);
                 setAudioFiles(data.audio_files);
-                setExplanations(data.explanations)
+                setExplanations(data.explanations);
+                setMaxScores(data.maxScores)
             
                 // answers 초기화
                 const initialAnswers = {};
@@ -163,16 +174,44 @@ function Question() {
         const currentQuestion = questions[currentIndex];
         const currentScore = scores[currentQuestion?.key];
 
-        // 마지막 문제이고 완료 버튼을 눌렀을 때
         if (currentIndex === questions.length - 1) {
-            // 결과 페이지로 이동
+            // 실제 진행된 문제들만 필터링
+            const relevantAnswers = {};
+            const relevantScores = {};
+            const relevantCorrectAnswers = [];
+            const relevantExplanations = [];
+            const relevantMaxScores = [];
+
+            attemptedQuestions.forEach((question) => {
+                const answerKey = question.key.replace('Q', 'A');
+                if (answers[answerKey] !== undefined) {
+                    relevantAnswers[answerKey] = answers[answerKey];
+                }
+                if (scores[question.key] !== undefined) {
+                    relevantScores[question.key] = scores[question.key];
+                }
+                const correctAns = correctAnswer.find(a => a.key === question.key);
+                if (correctAns) {
+                    relevantCorrectAnswers.push(correctAns);
+                }
+                const explanation = explanations.find(e => e.key === question.key);
+                if (explanation) {
+                    relevantExplanations.push(explanation);
+                }
+                const maxScore = maxScores.find(m => m.key === question.key);
+                if (maxScore) {
+                    relevantMaxScores.push(maxScore);
+                }
+            });
+
             navigate('/complete', {
                 state: {
-                    questions: questions,           // 제출된문제
-                    answers: answers,               // 사용자답변
-                    correctAnswer: correctAnswer,   // 정답
-                    scores: scores,                 // 사용자점수
-                    explanations: explanations      // 문제풀이
+                    questions: attemptedQuestions,           // 제출된문제
+                    answers: relevantAnswers,               // 사용자답변
+                    correctAnswer: relevantCorrectAnswers,   // 정답
+                    scores: relevantScores,                 // 사용자점수
+                    explanations: relevantExplanations,     // 문제풀이
+                    maxScores: relevantMaxScores,            // 문제별 총점
                 }
             });
             return;
@@ -388,6 +427,12 @@ function Question() {
                 }));
             }
         }
+        else { 
+            setScores(prev => ({
+                ...prev,
+                [questionNumber]: score
+            }));
+        }
     };
 
     const handleAnswerUpdate = (questionNumber, answer) => {
@@ -413,26 +458,23 @@ function Question() {
         );
     }
 
-    const currentQuestionKey = questions[currentIndex]?.key;
-    const currentCorrectAnswer = correctAnswer.find(answer => answer.key === currentQuestionKey)?.value || '';
-
     // 현재 문제의 점수가 실제로 설정되었는지 확인
     // hasCurrentScore 로직 수정
     const hasCurrentScore = (currentQuestionKey) => {
+
         if (currentQuestionKey === 'Q4') {
-        // Q4의 경우
-        if (Q4Attempts === 0) return false; // 첫 시도 전
+            if (Q4Attempts === 0) return false; // 첫 시도 전
 
-        const lastAttemptScores = Q4AllScores[Q4AllScores.length - 1];
-        const hasZero = lastAttemptScores.some(score => score === 0);
+            const lastAttemptScores = Q4AllScores[Q4AllScores.length - 1];
+            const hasZero = lastAttemptScores.some(score => score === 0);
 
-        if (Q4Attempts < 3) {
-            // 3번째 시도 전에는 모든 점수가 1이어야 활성화
-            return !hasZero;
-        } else {
-            // 3번째 시도에서는 무조건 활성화
-            return true;
-        }
+            if (Q4Attempts < 3) {
+                // 3번째 시도 전에는 모든 점수가 1이어야 활성화
+                return !hasZero;
+            } else {
+                // 3번째 시도에서는 무조건 활성화
+                return true;
+            }
         }
         // Q7 처리 추가
         else if (currentQuestionKey === 'Q7') {
