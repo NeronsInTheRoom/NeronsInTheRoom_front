@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 function Complete() {
   const location = useLocation();
-  const { questions, answers, correctAnswer, scores, explanations } = location.state || {};
+  const { questions, answers, correctAnswer, scores, explanations, maxScores } = location.state || {};
 
   // 총점 계산
   const totalScore = Object.values(scores || {}).reduce((sum, score) => sum + score, 0);
@@ -54,9 +54,6 @@ function Complete() {
                 const answer = correctAnswer?.find(ans => ans.key === question.key);
                 const userAnswer = answers[question.key?.replace('Q', 'A')];
                 const score = scores[question.key];
-                const maxScore = question.key === 'Q7' ? 3 : 
-                                question.key === 'Q8' ? 5 : 
-                                question.key === 'Q9' ? 3 : 1;
                 const explanation = explanations?.find(exp => exp.key === question.key);
                 
                 return (
@@ -82,7 +79,7 @@ function Complete() {
                       <td>{userAnswer || ''}</td>
                       <th>점수</th>
                       <td className='hp_alignC'>
-                        <b className='hp_purpleblue'>{score || 0}</b> / {maxScore}
+                          <b className='hp_purpleblue'>{score || 0}</b> / {maxScores?.find(max => max.key === question.key)?.value || 3}
                       </td>
                     </tr>
                     <tr>
