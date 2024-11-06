@@ -257,6 +257,7 @@ function Question() {
                     scores: relevantScores,                 // 사용자점수
                     explanations: relevantExplanations,     // 문제풀이
                     maxScores: relevantMaxScores,            // 문제별 총점
+                    place
                 }
             });
             return;
@@ -556,7 +557,9 @@ function Question() {
                 <div className="ly_fSpace ly_fdColumn hp_padding20 hp_pt80 hp_ht100">
                     <div>
                         <div className="el_question">
-                            {getCurrentQuestion()}
+                        {currentQuestionKey === 'Q3-1' 
+                            ? `${getCurrentQuestion()} ${place && !['집', '병원'].includes(place) ? `${place}인가요?` : ''}`
+                            : getCurrentQuestion()}
                         </div>
                         <div className="random-image-word hp_mt30">
                             {imageSrc && <img src={imageSrc} alt="Question Image" />}

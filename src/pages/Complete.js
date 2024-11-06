@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 function Complete() {
   const location = useLocation();
-  const { questions, answers, correctAnswer, scores, explanations, maxScores } = location.state || {};
+  const { questions, answers, correctAnswer, scores, explanations, maxScores, place } = location.state || {};
 
   // 총점 계산
   const totalScore = Object.values(scores || {}).reduce((sum, score) => sum + score, 0);
@@ -66,7 +66,10 @@ function Complete() {
                     <tr className='bl_resultTB__line hp_fBack'>
                       <th>질문</th>
                       <td colSpan={3}>
-                        {question.value}
+                      {question.key === 'Q3-1'
+                        ? `${question.value} ${place && !['집', '병원'].includes(place) ? `${place}인가요?` : ''}`
+                        : question.value}
+                        
                         {isQ8 && (
                           <>
                             <br />
