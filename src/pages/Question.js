@@ -20,12 +20,13 @@ function Question() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [attemptedQuestions, setAttemptedQuestions] = useState([]);
     const location = useLocation();
-    const { birthDate, place} = location.state || {};
+    const { type, birthDate, place} = location.state || {};
     const [imageSrc, setImageSrc] = useState(null);
     const [imageCounter, setImageCounter] = useState(0);
     const imageNames = ['clock', 'key', 'stamp', 'pencil', 'coin'];
     const maxImages = imageNames.length;
     
+    console.log("type : ",type)
     console.log("birthDate",birthDate)
     console.log("place",place)
     console.log("failedIndices", failedIndices)
