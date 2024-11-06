@@ -80,7 +80,7 @@ function Complete() {
                     </tr>
                     <tr>
                       <th>정답</th>
-                      <td colSpan={3}>{answer?.value}</td>
+                      <td colSpan={3}>{question.key === 'Q3' && !answer?.value ? place : answer?.value}</td>
                     </tr>
                     <tr className='hp_fBack'>
                       <th>답변</th>
