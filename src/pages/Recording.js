@@ -9,12 +9,14 @@ function Recording({
     birthDate,
     place,
     imageName,
-    onAsyncCorrectAnswer
+    onAsyncCorrectAnswer,
+    onStartRecording  // 녹음 시작 시 호출될 함수
 }) {
     const [isRecording, setIsRecording] = useState(false);
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
 
+    // WAV 파일 생성을 위한 유틸리티 함수
     const createMonoWavBlob = (audioData, sampleRate = 48000) => {
         const buffer = new ArrayBuffer(44 + audioData.length * 2);
         const view = new DataView(buffer);
@@ -49,6 +51,7 @@ function Recording({
         }
     };
 
+    // 녹음 시작 및 중지 함수
     const toggleRecording = async () => {
         if (isRecording) {
             mediaRecorderRef.current?.stop();
@@ -97,6 +100,9 @@ function Recording({
                     }
                 };
 
+                // 녹음이 시작될 때 부모 컴포넌트의 타이머 해제 함수 호출
+                onStartRecording && onStartRecording();  
+                
                 setIsRecording(true);
 
             } catch (error) {
@@ -105,19 +111,19 @@ function Recording({
         }
     };
 
+    // 서버로 오디오 데이터 전송 함수
     const sendAudioToServer = async (audioBlob) => {
         try {
             const formData = new FormData();
             formData.append('file', audioBlob, 'recording.wav');
             formData.append('correctAnswer', correctAnswer);
 
-            // Q1일 때는 birthDate를, Q3 또는 Q3-1일 때는 place를 추가
+            // 조건에 따라 추가 데이터를 formData에 추가
             if (questionNumber === 'Q1' && birthDate) {
                 formData.append('birth_date', birthDate);
             } else if ((questionNumber === 'Q3' || questionNumber === 'Q3-1') && place) {
                 formData.append('place', place);
             }
-            // Q8일 때는 imageName 추가
             if (questionNumber === 'Q8' && imageName) {
                 formData.append('image_name', imageName);
             }
@@ -132,15 +138,10 @@ function Recording({
             }
 
             const data = await response.json();
-            // score와 answer 모두 부모 컴포넌트로 전달
             onScoreUpdate(questionNumber, data.score);
             onAnswerUpdate(questionNumber, data.answer);
-            console.log('Score:', data.score);
-            console.log('Answer:', data.answer);
-            console.log(`데이터 확인: ${JSON.stringify(data)}`)
             const specificQuestions = ['Q1', 'Q2', 'Q3', 'Q3-1'];
             if (specificQuestions.includes(questionNumber)) {
-                console.log('CorrectAnswer:', data.correctAnswer);
                 onAsyncCorrectAnswer(questionNumber, data.correctAnswer);
             }
 
@@ -152,9 +153,7 @@ function Recording({
     return (
         <button
             onClick={toggleRecording}
-            className={`el_btn el_btnL ${
-                isRecording ? 'el_btn__black' : 'el_btn__black'
-            } hp_wd100`}
+            className={`el_btn el_btnL ${isRecording ? 'el_btn__black' : 'el_btn__black'} hp_wd100`}
         >
             {isRecording ? '녹음 중지' : '녹음 시작'}
         </button>
