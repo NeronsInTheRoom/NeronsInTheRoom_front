@@ -391,25 +391,26 @@ function Question() {
                 return;
             }
             
-            // handleNext 함수 내의 Q7 관련 부분 수정
             if (currentQuestion?.key === 'Q7') {
                 const lastQ7Scores = Q7AllScores[Q7AllScores.length - 1];
                 if (lastQ7Scores) {
-                    // 모든 점수가 1이면 바로 Q8로
-                    if (lastQ7Scores.every(score => score === 1)) {
-                        // 각 1점당 2점으로 계산하고, failedIndices에 있는 인덱스는 0점 처리
-                        let finalScore = lastQ7Scores.reduce((sum, score, index) => {
-                            // failedIndices에 있는 인덱스는 0점 처리
-                            if (failedIndices.includes(index)) {
-                                return sum;
-                            }
-                            // 1점인 경우 2점으로 계산
+                    // Q7의 정답 단어들 가져오기
+                    const q7CorrectAnswer = correctAnswer.find(ans => ans.key === 'Q7')?.value || '';
+                    const correctWords = q7CorrectAnswer.split(/[,\s]+/).map(word => word.trim());
+                    
+                    // failedIndices에 있는 단어는 점수 계산에서 제외
+                    let finalScore = lastQ7Scores.reduce((sum, score, index) => {
+                        const currentWord = correctWords[index];
+                        if (!failedIndices.includes(currentWord)) {
                             return sum + (score === 1 ? 2 : 0);
-                        }, 0);
-                        
-                        // 최대 3점으로 제한
-                        finalScore = Math.min(finalScore, 3);
-                        
+                        }
+                        return sum;
+                    }, 0);
+                    
+                    // 최대 3점으로 제한
+                    finalScore = Math.min(finalScore, 3);
+                    
+                    if (lastQ7Scores.every(score => score === 1)) {
                         setScores(prev => ({
                             ...prev,
                             'Q7': finalScore
@@ -418,13 +419,14 @@ function Question() {
                         setCurrentIndex(q8Index !== -1 ? q8Index : currentIndex + 1);
                         return;
                     }
-            
-                    // 틀린 문제들의 인덱스를 찾아서 하위 문제로 이동만 함 (failedIndices는 건드리지 않음)
+                    
+                    // 틀린 문제들의 인덱스를 찾아서 해당하는 하위 문제로만 이동
                     const zeroScoreIndexes = lastQ7Scores.map((score, idx) => 
                         score === 0 ? idx : -1
                     ).filter(idx => idx !== -1);
-            
+                    
                     if (zeroScoreIndexes.length > 0) {
+                        // 틀린 문제 중 첫 번째 것의 하위 문제로 이동
                         const nextQuestionKey = `Q7-${zeroScoreIndexes[0] + 1}`;
                         const nextQuestionIndex = questions.findIndex(q => q.key === nextQuestionKey);
                         if (nextQuestionIndex !== -1) {
@@ -434,16 +436,26 @@ function Question() {
                 }
                 return;
             }
-
-            // Q7 하위 문제들 처리
+            
+            // Q7 하위 문제들 처리 부분도 수정
             if (currentQuestion?.key.startsWith('Q7-')) {
                 const currentNum = parseInt(currentQuestion.key.split('-')[1]);
                 const lastQ7Scores = Q7AllScores[Q7AllScores.length - 1];
                 
                 if (lastQ7Scores) {
-                    // 다음 틀린 문제의 하위 문제로 이동
-                    const nextFailedIndex = failedIndices.find(index => index + 1 > currentNum);
-                    if (nextFailedIndex !== undefined) {
+                    // Q7의 정답 단어들 가져오기
+                    const q7CorrectAnswer = correctAnswer.find(ans => ans.key === 'Q7')?.value || '';
+                    const correctWords = q7CorrectAnswer.split(/[,\s]+/).map(word => word.trim());
+                    
+                    // 현재 하위 문제에 해당하는 단어
+                    const currentWord = correctWords[currentNum - 1];
+                    
+                    // 다음으로 틀린 문제 찾기
+                    const nextFailedIndex = lastQ7Scores.findIndex((score, idx) => 
+                        score === 0 && idx + 1 > currentNum
+                    );
+                    
+                    if (nextFailedIndex !== -1) {
                         const nextQuestionKey = `Q7-${nextFailedIndex + 1}`;
                         const nextQuestionIndex = questions.findIndex(q => q.key === nextQuestionKey);
                         if (nextQuestionIndex !== -1) {
@@ -453,40 +465,20 @@ function Question() {
                     }
                     
                     // 모든 하위 문제가 끝났을 때 최종 점수 계산
-                    let totalScore = 0;
-                    
-                    // Q7 점수 계산 (1점당 2점으로 계산)
-                    lastQ7Scores.forEach((score, index) => {
-                        // failedIndices에 있는 인덱스는 0점 처리
-                        if (!failedIndices.includes(index)) {
-                            totalScore += (score === 1 ? 2 : 0);
+                    let totalScore = lastQ7Scores.reduce((sum, score, index) => {
+                        const word = correctWords[index];
+                        if (!failedIndices.includes(word)) {
+                            return sum + (score === 1 ? 2 : 0);
                         }
-                    });
+                        return sum;
+                    }, 0);
                     
-                    // 하위 문제들의 점수 합산
-                    Object.entries(scores).forEach(([key, score]) => {
-                        // Q7 하위문제인 경우에만 처리
-                        if (key.startsWith('Q7-')) {
-                            const subQuestionNum = parseInt(key.split('-')[1]); // 하위문제 번호
-                            const correspondingIndex = subQuestionNum - 1; // 해당 인덱스
-                            
-                            // failedIndices에 해당 인덱스가 없는 경우에만 점수 합산
-                            if (!failedIndices.includes(correspondingIndex)) {
-                                totalScore += score;
-                            }
-                        }
-                    });
-                    
-                    // 최대 3점으로 제한
                     totalScore = Math.min(totalScore, 3);
-                    
-                    // 최종 점수를 Q7에만 저장
                     setScores(prev => ({
                         ...prev,
                         'Q7': totalScore
                     }));
                     
-                    // Q8로 이동
                     const q8Index = questions.findIndex(q => q.key === 'Q8');
                     setCurrentIndex(q8Index !== -1 ? q8Index : currentIndex + 1);
                 }
@@ -512,49 +504,55 @@ function Question() {
 
     const handleScoreUpdate = (questionNumber, score) => {
         if (questionNumber === 'Q4') {
-        // Q4인 경우의 특별 처리
             const scores = Array.isArray(score) ? score : [score];
-        
-        // 첫 번째 시도인 경우, 점수 합계를 저장
-        if (Q4Attempts === 0) {
-            const totalScore = scores.reduce((sum, s) => sum + s, 0);
-            setScores(prev => ({
-            ...prev,
-            [questionNumber]: totalScore
-            }));
-        }
-
-        // 모든 시도의 점수 저장
-        setQ4AllScores(prev => [...prev, scores]);
-
-        // 실패한 인덱스 추적
-        const currentFails = scores.map((s, idx) => s === 0 ? idx : -1).filter(idx => idx !== -1);
-        if (Q4Attempts === 0) {
-            setFailedIndices(currentFails);
-        } else {
-            // 이전에도 실패했고 이번에도 실패한 인덱스만 유지
-            setFailedIndices(prev => prev.filter(idx => currentFails.includes(idx)));
-        }
-
-        // 시도 횟수 증가
-        setQ4Attempts(prev => prev + 1);
+            
+            // correctAnswer에서 Q4에 해당하는 정답 찾기
+            const q4CorrectAnswer = correctAnswer.find(ans => ans.key === 'Q4')?.value || '';
+            const correctWords = q4CorrectAnswer.split(/[,\s]+/).map(word => word.trim());
+            
+            // 첫 번째 시도인 경우, 점수 합계를 저장
+            if (Q4Attempts === 0) {
+                const totalScore = scores.reduce((sum, s) => sum + s, 0);
+                setScores(prev => ({
+                    ...prev,
+                    [questionNumber]: totalScore
+                }));
+                
+                // 첫 시도에서 틀린 단어들 저장
+                const initialFails = correctWords.filter((word, idx) => scores[idx] === 0);
+                setFailedIndices(initialFails);
+            } else {
+                // 두 번째, 세 번째 시도에서는 이전에 틀린 단어들 중에서
+                // 이번에도 틀린 단어들만 유지
+                setFailedIndices(prev => prev.filter(word => {
+                    const wordIndex = correctWords.indexOf(word);
+                    return wordIndex !== -1 && scores[wordIndex] === 0;
+                }));
+            }
+            
+            setQ4AllScores(prev => [...prev, scores]);
+            setQ4Attempts(prev => prev + 1);
         } 
-        
-        // handleScoreUpdate 함수의 Q7 관련 부분 수정
+        // Q7 관련 부분 수정
         else if (questionNumber === 'Q7') {
             const scores = Array.isArray(score) ? score : [score];
             setQ7AllScores(prev => [...prev, scores]);
-            
             // 초기 점수는 저장하지 않음 (Q8로 넘어갈 때 최종 계산)
         }
         else if (questionNumber.startsWith('Q7-')) {
             // 하위 문제 점수 저장
             const singleScore = Array.isArray(score) ? score[0] : score;
             const currentNum = parseInt(questionNumber.split('-')[1]);
-            const correspondingIndex = currentNum - 1; // Q7-1은 인덱스 0, Q7-2는 인덱스 1...
-        
-            // failedIndices에 해당 인덱스가 있으면 무조건 0점으로 저장
-            if (failedIndices.includes(correspondingIndex)) {
+            
+            // Q7의 정답 가져오기
+            const q7CorrectAnswer = correctAnswer.find(ans => ans.key === 'Q7')?.value || '';
+            const correctWords = q7CorrectAnswer.split(/[,\s]+/).map(word => word.trim());
+            
+            // 현재 물어보는 단어 (currentNum - 1 인덱스의 단어)
+            const currentWord = correctWords[currentNum - 1];
+            
+            // failedIndices에 현재 단어가 있으면 무조건 0점으로 저장
+            if (failedIndices.includes(currentWord)) {
                 setScores(prev => ({
                     ...prev,
                     [questionNumber]: 0
@@ -566,7 +564,7 @@ function Question() {
                 }));
             }
         }
-        else { 
+        else {
             setScores(prev => ({
                 ...prev,
                 [questionNumber]: score
