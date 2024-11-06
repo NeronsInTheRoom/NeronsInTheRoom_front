@@ -51,18 +51,23 @@ function Complete() {
                 // Q7-1, Q7-2, Q7-3, Q8-1은 건너뛰기
                 if (['Q7-1', 'Q7-2', 'Q7-3', 'Q8-1'].includes(question.key)) return null;
 
-                const answer = correctAnswer?.find(ans => ans.key === question.key);
-                const userAnswer = answers[question.key?.replace('Q', 'A')];
-                const score = scores[question.key];
+                // Q8일 때 Q8-1의 사용자 답변과 점수를 사용
+                const isQ8 = question.key === 'Q8';
+                const scoreKey = isQ8 ? 'Q8-1' : question.key;
+                const userAnswerKey = isQ8 ? 'Q8-1' : question.key;
+
+                const answer = correctAnswer?.find(ans => ans.key === question.key); // Q8의 정답 유지
+                const userAnswer = answers[userAnswerKey.replace('Q', 'A')]; // Q8일 때 Q8-1의 사용자 답변
+                const score = scores[scoreKey]; // Q8일 때 Q8-1의 점수
                 const explanation = explanations?.find(exp => exp.key === question.key);
-                
+
                 return (
                   <React.Fragment key={question.key}>
                     <tr className='bl_resultTB__line hp_fBack'>
                       <th>질문</th>
                       <td colSpan={3}>
                         {question.value}
-                        {question.key === 'Q8' && (
+                        {isQ8 && (
                           <>
                             <br />
                             {questions.find(q => q.key === 'Q8-1')?.value}
@@ -79,7 +84,7 @@ function Complete() {
                       <td>{userAnswer || ''}</td>
                       <th>점수</th>
                       <td className='hp_alignC'>
-                          <b className='hp_purpleblue'>{score || 0}</b> / {maxScores?.find(max => max.key === question.key)?.value || 3}
+                        <b className='hp_purpleblue'>{score || 0}</b> / {maxScores?.find(max => max.key === question.key)?.value || 3}
                       </td>
                     </tr>
                     <tr>
