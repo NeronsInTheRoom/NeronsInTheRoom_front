@@ -155,7 +155,7 @@ function Recording({
             onClick={toggleRecording}
             className={`el_btn el_btnL ${isRecording ? 'el_btn__black' : 'el_btn__black'} hp_wd100`}
         >
-            {isRecording ? '녹음 중지' : '녹음 시작'}
+            {isRecording ? '녹음 완료' : '녹음 시작'}
         </button>
     );
 }

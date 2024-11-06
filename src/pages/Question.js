@@ -30,6 +30,46 @@ function Question() {
     console.log("birthDate",birthDate)
     console.log("place",place)
     console.log("failedIndices", failedIndices)
+
+    useEffect(() => {
+        // place 값이 유효한 경우에만 TTS 요청을 보냄
+        if (place && !['병원', '집', ''].includes(place.trim())) {
+            sendTTSRequest(place);
+        }
+    }, [place]);
+
+    const sendTTSRequest = async (place) => {
+        try {
+            const response = await fetch('http://localhost:8000/tts_Q3_2', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    text: `${place}인가요?`,
+                })
+            });
+    
+            if (!response.ok) {
+                throw new Error('Failed to send TTS request');
+            }
+    
+            // 오디오 파일 URL을 반환받음
+            const audioUrl = URL.createObjectURL(await response.blob());
+            console.log('TTS Result:', audioUrl);
+
+            // audioFiles에 추가
+            setAudioFiles(prevFiles => [
+                ...prevFiles,
+                { filename: 'Q3-2.wav', url: audioUrl } // 파일 이름과 URL을 포함한 객체 추가
+            ]);
+            
+            return audioUrl; // 오디오 URL 반환
+        } catch (error) {
+            console.error('Error sending TTS request:', error);
+        }
+    };
+
     // 타임아웃을 관리할 참조
     const questionTimeoutRef = useRef(null);
 
@@ -109,6 +149,15 @@ function Question() {
                 await playAudio(mainAudioFile.url);
             }
 
+            // Q3-1일 때 Q3-2.wav도 연이어 재생
+            if (questionKey === 'Q3-1') {
+                const nextAudioFile = audioFiles.find(file => file.filename === 'Q3-2.wav');
+                if (nextAudioFile) {
+                    console.log('Playing next audio:', nextAudioFile.url);
+                    await playAudio(nextAudioFile.url); // Q3-2.wav 재생
+                }
+            }
+
             // 특수 케이스 처리
             if (['Q4'].includes(questionKey)) {
                 const additionalAudioFile = audioFiles.find(file => file.filename === 'D4.wav');
@@ -164,6 +213,8 @@ function Question() {
                 setAudioFiles(data.audio_files);
                 setExplanations(data.explanations);
                 setMaxScores(data.maxScores)
+
+                console.log("audioFiles", audioFiles)
             
                 // answers 초기화
                 const initialAnswers = {};
