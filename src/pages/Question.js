@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Recording from './Recording';
 
@@ -29,10 +29,39 @@ function Question() {
     console.log("birthDate",birthDate)
     console.log("place",place)
     console.log("failedIndices", failedIndices)
+    // 타임아웃을 관리할 참조
+    const questionTimeoutRef = useRef(null);
 
     const currentQuestionKey = questions[currentIndex]?.key;
     const currentCorrectAnswer = correctAnswer.find(answer => answer.key === currentQuestionKey)?.value || '';
 
+    // 타이머 해제 함수
+    const clearQuestionTimeout = () => {
+        if (questionTimeoutRef.current) {
+            clearTimeout(questionTimeoutRef.current);
+            questionTimeoutRef.current = null;
+        }
+    };
+
+    // Q3일 때 9초 타이머를 설정하고, 녹음 시작 시 해제할 수 있도록 수정
+    useEffect(() => {
+        if (currentQuestionKey === 'Q3') {
+            questionTimeoutRef.current = setTimeout(() => {
+                const nextIndex = questions.findIndex(q => q.key === 'Q3-1');
+                if (nextIndex !== -1) {
+                    setCurrentIndex(nextIndex);
+                }
+            }, 9000); // 9초 후 Q3-1로 이동
+
+            return () => clearQuestionTimeout(); // 타이머 해제
+        }
+    }, [currentQuestionKey, questions]);
+
+    // 녹음 시작 시 타이머 해제
+    const handleStartRecording = () => {
+        clearQuestionTimeout();
+    };
+    
     // 동적 정답 함수
     const asyncCorrectAnswer = (questionKey, answer) => {
         setCorrectAnswer(prevCorrectAnswer => {
@@ -543,6 +572,7 @@ function Question() {
                             place={place}
                             imageName={imageNames[imageCounter]}
                             onAsyncCorrectAnswer={asyncCorrectAnswer}
+                            onStartRecording={handleStartRecording} // 녹음 시작 시 호출
                         />
                         
                         {hasCurrentScore(currentQuestionKey) && !isPlaying && (
