@@ -133,20 +133,32 @@ function Question() {
         });
     };
 
+    // imageCounter가 업데이트될 때마다 playAudioSequence를 호출하도록 새로운 useEffect 추가
+    useEffect(() => {
+        if (questions[currentIndex]?.key === 'Q8' && scores['Q8'] === 0) {  // Q8의 점수가 0일 때만 호출
+            playAudioSequence('Q8', true); // 이미지 변경 시 기본 오디오 제외
+            setScores(prevScores => ({
+                ...prevScores,
+                Q8: undefined  // Q8 점수를 빈 상태로 초기화
+            }));
+        }
+    }, [imageCounter, scores]);
+
     // 오디오 시퀀스 재생 함수
-    const playAudioSequence = async (questionKey) => {
+    const playAudioSequence = async (questionKey, isImageChange = false) => {
         if (isPlaying) return;
         
         setIsPlaying(true);
         console.log('Playing audio for:', questionKey);
 
         try {
-            // 기본 질문 오디오 찾기
-            const mainAudioFile = audioFiles.find(file => file.filename === `${questionKey}.wav`);
-            
-            if (mainAudioFile) {
-                console.log('Playing main audio:', mainAudioFile.url);
-                await playAudio(mainAudioFile.url);
+            // 기본 질문 오디오 찾기 (isImageChange가 false일 때만 재생)
+            if (!isImageChange) {
+                const mainAudioFile = audioFiles.find(file => file.filename === `${questionKey}.wav`);
+                if (mainAudioFile) {
+                    console.log('Playing main audio:', mainAudioFile.url);
+                    await playAudio(mainAudioFile.url);
+                }
             }
 
             // Q3-1일 때 Q3-2.wav도 연이어 재생
@@ -175,6 +187,15 @@ function Question() {
                 const additionalAudioFile = audioFiles.find(file => file.filename === 'D6-1.wav');
                 if (additionalAudioFile) {
                     console.log('Playing D6-1 audio');
+                    await playAudio(additionalAudioFile.url);
+                }
+            } else if (questionKey === "Q8" && scores['Q8'] === 0) {
+                // Q8에 대한 이미지별 오디오 재생
+                const audioIndex = imageCounter + 2; // 'D8-2.wav'부터 시작하므로 2를 더함
+                const additionalAudioFile = audioFiles.find(file => file.filename === `D8-${audioIndex}.wav`);
+                
+                if (additionalAudioFile) {
+                    console.log(`Playing D8-${audioIndex} audio`);
                     await playAudio(additionalAudioFile.url);
                 }
             }
@@ -260,10 +281,14 @@ function Question() {
     // score나 answer가 업데이트될 때마다 로그 출력
     useEffect(() => {
         if (Object.keys(scores).length > 0) {
-            const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
+            // Q8 키를 제외한 scores의 합계 계산
+            const totalScore = Object.entries(scores)
+                .filter(([key]) => key !== 'Q8') // Q8을 제외
+                .reduce((sum, [, score]) => sum + score, 0);
+    
             console.log('현재 점수:', scores);
             console.log('현재 답변:', answers);
-            console.log(`총점: ${totalScore}점`);
+            console.log(`총점 (Q8 제외): ${totalScore}점`);
         }
     }, [scores, answers]);
 
