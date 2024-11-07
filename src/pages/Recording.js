@@ -10,7 +10,8 @@ function Recording({
     place,
     imageName,
     onAsyncCorrectAnswer,
-    onStartRecording  // 녹음 시작 시 호출될 함수
+    onStartRecording,  // 녹음 시작 시 호출될 함수
+    onIsTrue
 }) {
     const [isRecording, setIsRecording] = useState(false);
     const mediaRecorderRef = useRef(null);
@@ -149,7 +150,13 @@ function Recording({
             if (specificQuestions.includes(questionNumber)) {
                 onAsyncCorrectAnswer(questionNumber, data.correctAnswer);
             }
-    
+            // Q8 이미지 정답 y/n 반환
+            if (questionNumber === 'Q8') {
+                // console.log(`Q8 정답 여부: ${data.isTrue}`);
+                // console.log(`데이터 내용: ${JSON.stringify(data)}`);
+                onIsTrue(data.isTrue)
+            }
+
         } catch (error) {
             console.error('서버 전송 오류:', error);
         }
