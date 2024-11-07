@@ -636,6 +636,13 @@ function Question() {
                             ? `${getCurrentQuestion()} ${place && !['집', '병원'].includes(place) ? `${place}인가요?` : ''}`
                             : getCurrentQuestion()}
                         </div>
+                        {answers[`A${currentQuestionKey.substring(1)}`] && (
+                            <div className="hp_mt10">
+                                <p className="el_question hp_fs14">
+                                    답변: {answers[`A${currentQuestionKey.substring(1)}`]}
+                                </p>
+                            </div>
+                        )}
                         <div className="random-image-word hp_mt30">
                             {imageSrc && <img src={imageSrc} alt="Question Image" />}
                         </div>
