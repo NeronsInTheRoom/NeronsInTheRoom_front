@@ -6,7 +6,9 @@ function Complete() {
   const { questions, answers, correctAnswer, scores, explanations, maxScores, place } = location.state || {};
 
   // 총점 계산
-  const totalScore = Object.values(scores || {}).reduce((sum, score) => sum + score, 0);
+  const totalScore = Object.entries(scores || {})
+    .filter(([key]) => key !== 'Q8') // Q8 키를 제외
+    .reduce((sum, [, score]) => sum + score, 0);
 
   const getStatusInfo = (score) => {
     if (score > 21) return { text: '정상', className: 'el_mark__safety' };
