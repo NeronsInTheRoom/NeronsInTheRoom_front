@@ -25,6 +25,7 @@ function Question() {
     const [imageCounter, setImageCounter] = useState(0);
     const imageNames = ['clock', 'key', 'stamp', 'pencil', 'coin'];
     const maxImages = imageNames.length;
+    const [q8IsTrue, setQ8IsTrue] = useState({})
     
     console.log("type : ",type)
     console.log("birthDate",birthDate)
@@ -133,16 +134,20 @@ function Question() {
         });
     };
 
+    // Q8 정답 여부 핸들
+    const handleQ8IsTrue = (isTrue) => {
+        // console.log(`handleQ8IsTrue 호출됨, 값: ${isTrue}`);
+        setQ8IsTrue({isTrue})
+    }
+
     // imageCounter가 업데이트될 때마다 playAudioSequence를 호출하도록 새로운 useEffect 추가
     useEffect(() => {
-        if (questions[currentIndex]?.key === 'Q8' && scores['Q8'] === 0) {  // Q8의 점수가 0일 때만 호출
+        if (questions[currentIndex]?.key === 'Q8' && q8IsTrue?.isTrue === 'n') {  // Q8의 점수가 0일 때만 호출
             playAudioSequence('Q8', true); // 이미지 변경 시 기본 오디오 제외
-            setScores(prevScores => ({
-                ...prevScores,
-                Q8: undefined  // Q8 점수를 빈 상태로 초기화
-            }));
+            console.log(`Q8 핸들러 값 확인: ${JSON.stringify(q8IsTrue)}`)
+            setQ8IsTrue({})
         }
-    }, [imageCounter, scores]);
+    }, [imageCounter, q8IsTrue]);
 
     // 오디오 시퀀스 재생 함수
     const playAudioSequence = async (questionKey, isImageChange = false) => {
@@ -189,7 +194,7 @@ function Question() {
                     console.log('Playing D6-1 audio');
                     await playAudio(additionalAudioFile.url);
                 }
-            } else if (questionKey === "Q8" && scores['Q8'] === 0) {
+            } else if (questionKey === "Q8" && q8IsTrue?.isTrue === 'n') {
                 // Q8에 대한 이미지별 오디오 재생
                 const audioIndex = imageCounter + 2; // 'D8-2.wav'부터 시작하므로 2를 더함
                 const additionalAudioFile = audioFiles.find(file => file.filename === `D8-${audioIndex}.wav`);
@@ -653,6 +658,7 @@ function Question() {
                             imageName={imageNames[imageCounter]}
                             onAsyncCorrectAnswer={asyncCorrectAnswer}
                             onStartRecording={handleStartRecording} // 녹음 시작 시 호출
+                            onIsTrue={handleQ8IsTrue}
                         />
                         
                         {hasCurrentScore(currentQuestionKey) && !isPlaying && (
