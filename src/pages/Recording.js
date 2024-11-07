@@ -112,13 +112,12 @@ function Recording({
         }
     };
 
-    // 서버로 오디오 데이터 전송 함수
     const sendAudioToServer = async (audioBlob) => {
         try {
             const formData = new FormData();
             formData.append('file', audioBlob, 'recording.wav');
             formData.append('correctAnswer', correctAnswer);
-
+    
             // 조건에 따라 추가 데이터를 formData에 추가
             if (questionNumber === 'Q1' && birthDate) {
                 formData.append('birth_date', birthDate);
@@ -128,18 +127,24 @@ function Recording({
             if (questionNumber === 'Q8' && imageName) {
                 formData.append('image_name', imageName);
             }
-
+    
             const response = await fetch(`http://localhost:8000/${questionNumber}`, {
                 method: 'POST',
                 body: formData,
             });
-
+    
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
+    
             const data = await response.json();
-            onScoreUpdate(questionNumber, data.score);
+            
+            // score가 배열인 경우와 단일 값인 경우를 모두 처리
+            const score = Array.isArray(data.score) 
+                ? data.score.map(s => parseInt(s, 10))  
+                : parseInt(data.score, 10);             
+            
+            onScoreUpdate(questionNumber, score);
             onAnswerUpdate(questionNumber, data.answer);
             const specificQuestions = ['Q1', 'Q2', 'Q3', 'Q3-1'];
             if (specificQuestions.includes(questionNumber)) {
