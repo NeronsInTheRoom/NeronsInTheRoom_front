@@ -228,7 +228,7 @@ function Question() {
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
-                const response = await fetch('http://localhost:8000/start');
+                const response = await fetch(`http://localhost:8000/start?type=${type}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch questions');
                 }
@@ -297,50 +297,87 @@ function Question() {
         }
     }, [scores, answers]);
 
+    // getNavigationState 함수 수정
+    const getNavigationState = () => {
+        const relevantAnswers = {};
+        const relevantScores = {};
+        const relevantCorrectAnswers = [];
+        const relevantExplanations = [];
+        const relevantMaxScores = [];
+
+        const lastQ7Scores = Q7AllScores[Q7AllScores.length - 1];
+
+        attemptedQuestions.forEach((question) => {
+            const answerKey = question.key.replace('Q', 'A');
+            if (answers[answerKey] !== undefined) {
+                relevantAnswers[answerKey] = answers[answerKey];
+            }
+
+            // Q7 최종 점수 계산
+            if (question.key === 'Q7' && lastQ7Scores) {
+                const q7CorrectAnswer = correctAnswer.find(ans => ans.key === 'Q7')?.value || '';
+                const correctWords = q7CorrectAnswer.split(/[,\s]+/).map(word => word.trim());
+                
+                let totalScore = lastQ7Scores.reduce((sum, score, index) => {
+                    const currentWord = correctWords[index];
+                    
+                    if (failedIndices.includes(currentWord)) {
+                        // failedIndices에 있는 단어는 하위 문제 점수도 0점
+                        return sum + 0;
+                    } else if (score === 1) {
+                        // failedIndices에 없고 원래 맞춘 답변은 2점
+                        return sum + 2;
+                    } else {
+                        // failedIndices에 없고 틀린 답변은 해당 하위 문제의 점수 사용
+                        const subQuestionKey = `Q7-${index + 1}`;
+                        return sum + (scores[subQuestionKey] || 0);
+                    }
+                }, 0);
+                
+                // 최대 3점으로 제한
+                totalScore = Math.min(totalScore, 3);
+                relevantScores[question.key] = totalScore;
+            } 
+            // Q7 하위 문제는 제외
+            else if (!question.key.startsWith('Q7-')) {
+                if (scores[question.key] !== undefined) {
+                    relevantScores[question.key] = scores[question.key];
+                }
+            }
+
+            const correctAns = correctAnswer.find(a => a.key === question.key);
+            if (correctAns) {
+                relevantCorrectAnswers.push(correctAns);
+            }
+            const explanation = explanations.find(e => e.key === question.key);
+            if (explanation) {
+                relevantExplanations.push(explanation);
+            }
+            const maxScore = maxScores.find(m => m.key === question.key);
+            if (maxScore) {
+                relevantMaxScores.push(maxScore);
+            }
+        });
+
+        return {
+            questions: attemptedQuestions,
+            answers: relevantAnswers,
+            correctAnswer: relevantCorrectAnswers,
+            scores: relevantScores,
+            explanations: relevantExplanations,
+            maxScores: relevantMaxScores,
+            place,
+            type
+        };
+    };
+
     const handleNext = () => {
         const currentQuestion = questions[currentIndex];
         const currentScore = scores[currentQuestion?.key];
 
         if (currentIndex === questions.length - 1) {
-            // 실제 진행된 문제들만 필터링
-            const relevantAnswers = {};
-            const relevantScores = {};
-            const relevantCorrectAnswers = [];
-            const relevantExplanations = [];
-            const relevantMaxScores = [];
-
-            attemptedQuestions.forEach((question) => {
-                const answerKey = question.key.replace('Q', 'A');
-                if (answers[answerKey] !== undefined) {
-                    relevantAnswers[answerKey] = answers[answerKey];
-                }
-                if (scores[question.key] !== undefined) {
-                    relevantScores[question.key] = scores[question.key];
-                }
-                const correctAns = correctAnswer.find(a => a.key === question.key);
-                if (correctAns) {
-                    relevantCorrectAnswers.push(correctAns);
-                }
-                const explanation = explanations.find(e => e.key === question.key);
-                if (explanation) {
-                    relevantExplanations.push(explanation);
-                }
-                const maxScore = maxScores.find(m => m.key === question.key);
-                if (maxScore) {
-                    relevantMaxScores.push(maxScore);
-                }
-            });
-
             navigate('/complete', {
-                state: {
-                    questions: attemptedQuestions,           // 제출된문제
-                    answers: relevantAnswers,               // 사용자답변
-                    correctAnswer: relevantCorrectAnswers,   // 정답
-                    scores: relevantScores,                 // 사용자점수
-                    explanations: relevantExplanations,     // 문제풀이
-                    maxScores: relevantMaxScores,            // 문제별 총점
-                    place
-                }
+                state: getNavigationState()
             });
             return;
         }
@@ -396,6 +433,7 @@ function Question() {
                 return;
             }
             
+            // Q7 처리
             if (currentQuestion?.key === 'Q7') {
                 const lastQ7Scores = Q7AllScores[Q7AllScores.length - 1];
                 if (lastQ7Scores) {
@@ -403,35 +441,32 @@ function Question() {
                     const q7CorrectAnswer = correctAnswer.find(ans => ans.key === 'Q7')?.value || '';
                     const correctWords = q7CorrectAnswer.split(/[,\s]+/).map(word => word.trim());
                     
-                    // failedIndices에 있는 단어는 점수 계산에서 제외
-                    let finalScore = lastQ7Scores.reduce((sum, score, index) => {
-                        const currentWord = correctWords[index];
-                        if (!failedIndices.includes(currentWord)) {
-                            return sum + (score === 1 ? 2 : 0);
-                        }
-                        return sum;
-                    }, 0);
-                    
-                    // 최대 3점으로 제한
-                    finalScore = Math.min(finalScore, 3);
-                    
+                    // 모든 점수가 1인 경우 (완벽한 답변)
                     if (lastQ7Scores.every(score => score === 1)) {
+                        const finalScore = Math.min(lastQ7Scores.reduce((sum) => sum + 2, 0), 3);
                         setScores(prev => ({
                             ...prev,
                             'Q7': finalScore
                         }));
-                        const q8Index = questions.findIndex(q => q.key === 'Q8');
-                        setCurrentIndex(q8Index !== -1 ? q8Index : currentIndex + 1);
+                        
+                        if (type === 'simple') {
+                            navigate('/complete', {
+                                state: getNavigationState()
+                            });
+                        } else {
+                            const q8Index = questions.findIndex(q => q.key === 'Q8');
+                            setCurrentIndex(q8Index !== -1 ? q8Index : currentIndex + 1);
+                        }
                         return;
                     }
                     
-                    // 틀린 문제들의 인덱스를 찾아서 해당하는 하위 문제로만 이동
+                    // 틀린 문제가 있는 경우
                     const zeroScoreIndexes = lastQ7Scores.map((score, idx) => 
                         score === 0 ? idx : -1
                     ).filter(idx => idx !== -1);
                     
+                    // 첫 번째 틀린 문제로 이동
                     if (zeroScoreIndexes.length > 0) {
-                        // 틀린 문제 중 첫 번째 것의 하위 문제로 이동
                         const nextQuestionKey = `Q7-${zeroScoreIndexes[0] + 1}`;
                         const nextQuestionIndex = questions.findIndex(q => q.key === nextQuestionKey);
                         if (nextQuestionIndex !== -1) {
@@ -441,51 +476,33 @@ function Question() {
                 }
                 return;
             }
-            
-            // Q7 하위 문제들 처리 부분도 수정
+
+            // Q7 하위 문제들 처리
             if (currentQuestion?.key.startsWith('Q7-')) {
                 const currentNum = parseInt(currentQuestion.key.split('-')[1]);
                 const lastQ7Scores = Q7AllScores[Q7AllScores.length - 1];
                 
                 if (lastQ7Scores) {
-                    // Q7의 정답 단어들 가져오기
-                    const q7CorrectAnswer = correctAnswer.find(ans => ans.key === 'Q7')?.value || '';
-                    const correctWords = q7CorrectAnswer.split(/[,\s]+/).map(word => word.trim());
-                    
-                    // 현재 하위 문제에 해당하는 단어
-                    const currentWord = correctWords[currentNum - 1];
-                    
-                    // 다음으로 틀린 문제 찾기
                     const nextFailedIndex = lastQ7Scores.findIndex((score, idx) => 
                         score === 0 && idx + 1 > currentNum
                     );
-                    
-                    if (nextFailedIndex !== -1) {
+            
+                    if (nextFailedIndex === -1) {
+                        if (type === 'simple') {
+                            navigate('/complete', {
+                                state: getNavigationState()
+                            });
+                        } else {
+                            const q8Index = questions.findIndex(q => q.key === 'Q8');
+                            setCurrentIndex(q8Index !== -1 ? q8Index : currentIndex + 1);
+                        }
+                    } else {
                         const nextQuestionKey = `Q7-${nextFailedIndex + 1}`;
                         const nextQuestionIndex = questions.findIndex(q => q.key === nextQuestionKey);
                         if (nextQuestionIndex !== -1) {
                             setCurrentIndex(nextQuestionIndex);
-                            return;
                         }
                     }
-                    
-                    // 모든 하위 문제가 끝났을 때 최종 점수 계산
-                    let totalScore = lastQ7Scores.reduce((sum, score, index) => {
-                        const word = correctWords[index];
-                        if (!failedIndices.includes(word)) {
-                            return sum + (score === 1 ? 2 : 0);
-                        }
-                        return sum;
-                    }, 0);
-                    
-                    totalScore = Math.min(totalScore, 3);
-                    setScores(prev => ({
-                        ...prev,
-                        'Q7': totalScore
-                    }));
-                    
-                    const q8Index = questions.findIndex(q => q.key === 'Q8');
-                    setCurrentIndex(q8Index !== -1 ? q8Index : currentIndex + 1);
                 }
                 return;
             }
@@ -545,8 +562,7 @@ function Question() {
             // 초기 점수는 저장하지 않음 (Q8로 넘어갈 때 최종 계산)
         }
         else if (questionNumber.startsWith('Q7-')) {
-            // 하위 문제 점수 저장
-            const singleScore = Array.isArray(score) ? score[0] : score;
+            const scores = Array.isArray(score) ? score : [score];
             const currentNum = parseInt(questionNumber.split('-')[1]);
             
             // Q7의 정답 가져오기
@@ -563,9 +579,11 @@ function Question() {
                     [questionNumber]: 0
                 }));
             } else {
+                // 현재 단어의 인덱스에 해당하는 점수 사용
+                const currentScore = scores[currentNum - 1] || 0;
                 setScores(prev => ({
                     ...prev,
-                    [questionNumber]: singleScore
+                    [questionNumber]: currentScore
                 }));
             }
         }

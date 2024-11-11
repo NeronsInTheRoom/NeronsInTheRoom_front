@@ -3,12 +3,24 @@ import { useLocation } from 'react-router-dom';
 
 function Complete() {
   const location = useLocation();
-  const { questions, answers, correctAnswer, scores, explanations, maxScores, place } = location.state || {};
+  const { questions, answers, correctAnswer, scores, explanations, maxScores, place, type } = location.state || {};
 
   // 총점 계산
   const totalScore = Object.entries(scores || {})
-    .filter(([key]) => key !== 'Q8') // Q8 키를 제외
+    .filter(([key]) => !key.startsWith('Q7-') && key !== 'Q8')
     .reduce((sum, [, score]) => sum + score, 0);
+  
+  // 총 만점 계산
+  const totalMaxScore = maxScores?.reduce((sum, item) => {
+    if (type === 'simple') {
+      // simple 타입일 때는 특정 문제들만 합산
+      const simpleKeys = ['Q4', 'Q5', 'Q5-1', 'Q6', 'Q6-1', 'Q7'];
+      return simpleKeys.includes(item.key) ? sum + parseInt(item.value) : sum;
+    } else {
+      // full 타입일 때는 모든 문제 합산
+      return sum + parseInt(item.value);
+    }
+  }, 0);
 
   const getStatusInfo = (score) => {
     if (score > 21) return { text: '정상', className: 'el_mark__safety' };
@@ -32,7 +44,7 @@ function Complete() {
           <a className="el_btn el_btnL el_btn__blue hp_mt70" href="/">처음으로</a>
         </div>
         <div className="hp_padding20">
-          <p className="hp_fs16 hp_fw700">총 30점 만점</p>
+          <p className="hp_fs16 hp_fw700">총 {totalMaxScore}점 만점</p>
           <ul className="bl_listRing bl_guide hp_mt10">
             <li>21점 이상 : 정상</li>
             <li>16 ~ 20점 : 초기치매</li>
