@@ -26,7 +26,8 @@ function Question() {
     const imageNames = ['clock', 'key', 'stamp', 'pencil', 'coin'];
     const maxImages = imageNames.length;
     const [q8IsTrue, setQ8IsTrue] = useState({})
-    
+    const [answerVisible, setAnswerVisible] = useState(false); // Q8 답변 UI
+
     console.log("type : ",type)
     console.log("birthDate",birthDate)
     console.log("place",place)
@@ -142,12 +143,30 @@ function Question() {
 
     // imageCounter가 업데이트될 때마다 playAudioSequence를 호출하도록 새로운 useEffect 추가
     useEffect(() => {
-        if (questions[currentIndex]?.key === 'Q8' && q8IsTrue?.isTrue === 'n') {  // Q8의 점수가 0일 때만 호출
+        // Q8이고 q8IsTrue.isTrue가 'n'일 때만 playAudioSequence 호출
+        if (questions[currentIndex]?.key === 'Q8' && q8IsTrue?.isTrue === 'n') {
             playAudioSequence('Q8', true); // 이미지 변경 시 기본 오디오 제외
-            console.log(`Q8 핸들러 값 확인: ${JSON.stringify(q8IsTrue)}`)
-            setQ8IsTrue({})
+            console.log(`Q8 핸들러 값 확인: ${JSON.stringify(q8IsTrue)}`);
+            setQ8IsTrue({}); // 상태초기화
+        }
+    
+        // Q8일 때 answerVisible을 true로 설정하여 답변 표시
+        if (questions[currentIndex]?.key === 'Q8') {
+            setAnswerVisible(true); // Q8에 대해서만 답변 표시
+            console.log("Q8 answerVisible set to true");
+        } else {
+            setAnswerVisible(false); // 다른 경우 답변 숨김
+            console.log("Q8 answerVisible set to false");
         }
     }, [imageCounter, q8IsTrue]);
+
+    // Q8 이미지가 변경될 때 answerVisible을 확실히 초기화하기 위한 useEffect
+    useEffect(() => {
+        if (questions[currentIndex]?.key === 'Q8') {
+            setAnswerVisible(false); // 이미지가 변경될 때 답변 숨김
+            console.log("Q8 answerVisible set to false");
+        }
+    }, [imageCounter]);
 
     // 오디오 시퀀스 재생 함수
     const playAudioSequence = async (questionKey, isImageChange = false) => {
@@ -660,11 +679,23 @@ function Question() {
                             : getCurrentQuestion()}
                         </div>
                         {answers[`A${currentQuestionKey.substring(1)}`] && (
-                            <div className="hp_mt10">
-                                <p className="el_question hp_fs14">
-                                    답변: {answers[`A${currentQuestionKey.substring(1)}`]}
-                                </p>
-                            </div>
+                            currentQuestionKey === 'Q8' ? (
+                                // Q8일 때는 answerVisible 상태에 따라 답변 표시
+                                answerVisible && (
+                                    <div className="hp_mt10">
+                                        <p className="el_question hp_fs14">
+                                            답변: {answers['A8']}
+                                        </p>
+                                    </div>
+                                )
+                            ) : (
+                                // Q8이 아닐 때는 항상 답변 표시
+                                <div className="hp_mt10">
+                                    <p className="el_question hp_fs14">
+                                        답변: {answers[`A${currentQuestionKey.substring(1)}`]}
+                                    </p>
+                                </div>
+                            )
                         )}
                         <div className="random-image-word hp_mt30">
                             {imageSrc && <img src={imageSrc} alt="Question Image" />}
