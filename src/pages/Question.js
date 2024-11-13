@@ -27,6 +27,7 @@ function Question() {
     const maxImages = imageNames.length;
     const [q8IsTrue, setQ8IsTrue] = useState({})
     const [answerVisible, setAnswerVisible] = useState(false); // Q8 답변 UI
+    const [countdown, setCountdown] = useState(5); // 카운트다운 초기값 설정
 
     console.log("type : ",type)
     console.log("birthDate",birthDate)
@@ -39,6 +40,30 @@ function Question() {
             sendTTSRequest(place);
         }
     }, [place]);
+
+    // Q3 카운트다운 로직
+    useEffect(() => {
+        let timer;
+    
+        const currentQuestion = questions[currentIndex];
+    
+        // Q3이고 음성이 재생 중이지 않을 때만 카운트다운 시작
+        if (currentQuestion?.key === 'Q3' && !isPlaying) {
+            setCountdown(5); // 카운트 초기화
+            timer = setInterval(() => {
+                setCountdown((prevCount) => {
+                    if (prevCount <= 1) {
+                        clearInterval(timer); // 카운트가 끝나면 타이머 해제
+                        return 0;
+                    }
+                    return prevCount - 1; // 1씩 감소
+                });
+            }, 1000);
+        }
+    
+        // 타이머 해제
+        return () => clearInterval(timer); // 컴포넌트 언마운트 시 또는 질문 변경 시 타이머 해제
+    }, [currentIndex, questions, isPlaying]);
 
     const sendTTSRequest = async (place) => {
         try {
@@ -85,20 +110,6 @@ function Question() {
             questionTimeoutRef.current = null;
         }
     };
-
-    // Q3일 때 9초 타이머를 설정하고, 녹음 시작 시 해제할 수 있도록 수정
-    useEffect(() => {
-        if (currentQuestionKey === 'Q3') {
-            questionTimeoutRef.current = setTimeout(() => {
-                const nextIndex = questions.findIndex(q => q.key === 'Q3-1');
-                if (nextIndex !== -1) {
-                    setCurrentIndex(nextIndex);
-                }
-            }, 9000); // 9초 후 Q3-1로 이동
-
-            return () => clearQuestionTimeout(); // 타이머 해제
-        }
-    }, [currentQuestionKey, questions]);
 
     // 녹음 시작 시 타이머 해제
     const handleStartRecording = () => {
@@ -203,6 +214,16 @@ function Question() {
                     console.log('Playing main audio:', mainAudioFile.url);
                     await playAudio(mainAudioFile.url);
                 }
+            }
+            // Q3 음성 재생이 끝난 후 5초 타이머 설정
+            if (questionKey === 'Q3') {
+                setCountdown(5); // 음성이 끝난 후 카운트 초기화
+                questionTimeoutRef.current = setTimeout(() => {
+                    const nextIndex = questions.findIndex(q => q.key === 'Q3-1');
+                    if (nextIndex !== -1) {
+                        setCurrentIndex(nextIndex);
+                    }
+                }, 5000); // 카운트다운 완료 후 Q3-1로 이동
             }
             // Q3-1일 때 Q3-2.wav도 연이어 재생
             if (questionKey === 'Q3-1') {
@@ -717,6 +738,13 @@ function Question() {
                                     </p>
                                 </div>
                             )
+                        )}
+                        {currentQuestionKey === 'Q3' && (
+                            <div className="el_question">
+                                <p>
+                                    {countdown}초
+                                </p>
+                            </div>
                         )}
                         <div className="random-image-word hp_mt30">
                             {imageSrc && <img src={imageSrc} alt="Question Image" />}
