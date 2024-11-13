@@ -28,6 +28,7 @@ function Question() {
     const [q8IsTrue, setQ8IsTrue] = useState({})
     const [answerVisible, setAnswerVisible] = useState(false); // Q8 답변 UI
     const [countdown, setCountdown] = useState(5); // 카운트다운 초기값 설정
+    const [isRecording, setIsRecording] = useState(false); // 블록 표시 여부 관리
 
     console.log("type : ",type)
     console.log("birthDate",birthDate)
@@ -114,6 +115,7 @@ function Question() {
     // 녹음 시작 시 타이머 해제
     const handleStartRecording = () => {
         clearQuestionTimeout();
+        setIsRecording(true); // 블록 숨기기
     };
     
     // 동적 정답 함수
@@ -739,11 +741,9 @@ function Question() {
                                 </div>
                             )
                         )}
-                        {currentQuestionKey === 'Q3' && (
+                        {currentQuestionKey === "Q3" && !isRecording && (
                             <div className="el_question">
-                                <p>
-                                    {countdown}초
-                                </p>
+                                <p>{countdown}초</p>
                             </div>
                         )}
                         <div className="random-image-word hp_mt30">
