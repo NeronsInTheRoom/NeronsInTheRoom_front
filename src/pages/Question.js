@@ -51,6 +51,7 @@ function Question() {
         // Q3이고 음성이 재생 중이지 않을 때만 카운트다운 시작
         if (currentQuestion?.key === 'Q3' && !isPlaying) {
             setCountdown(5); // 카운트 초기화
+            setIsRecording(false)
             timer = setInterval(() => {
                 setCountdown((prevCount) => {
                     if (prevCount <= 1) {
