@@ -168,6 +168,26 @@ function Question() {
         }
     }, [imageCounter]);
 
+    // Q4AllScores가 업데이트될 때마다 체크하는 useEffect 추가
+    useEffect(() => {
+        const currentQuestion = questions[currentIndex];
+        if (currentQuestion?.key === 'Q4' && Q4AllScores.length > 0) {
+            const lastScores = Q4AllScores[Q4AllScores.length - 1];
+            const hasZero = lastScores.some(score => score === 0);
+            
+            // 점수가 완벽하지 않고, 아직 3번째 시도가 아니면 D4-1 재생
+            if (hasZero && Q4Attempts < 3) {
+                // 첫 시도가 아닐 때만 D4-1 재생
+                if (Q4Attempts > 0) {
+                    const audioFile = audioFiles.find(file => file.filename === 'D4-1.wav');
+                    if (audioFile) {
+                        playAudio(audioFile.url);
+                    }
+                }
+            }
+        }
+    }, [Q4AllScores]);
+
     // 오디오 시퀀스 재생 함수
     const playAudioSequence = async (questionKey, isImageChange = false) => {
         if (isPlaying) return;
@@ -184,7 +204,6 @@ function Question() {
                     await playAudio(mainAudioFile.url);
                 }
             }
-
             // Q3-1일 때 Q3-2.wav도 연이어 재생
             if (questionKey === 'Q3-1') {
                 const nextAudioFile = audioFiles.find(file => file.filename === 'Q3-2.wav');
@@ -193,13 +212,15 @@ function Question() {
                     await playAudio(nextAudioFile.url); // Q3-2.wav 재생
                 }
             }
-
             // 특수 케이스 처리
-            if (['Q4'].includes(questionKey)) {
-                const additionalAudioFile = audioFiles.find(file => file.filename === 'D4.wav');
-                if (additionalAudioFile) {
-                    console.log('Playing D4 audio');
-                    await playAudio(additionalAudioFile.url);
+            if (questionKey === 'Q4') {
+                // 첫 시도일 때만 D4.wav 재생
+                if (Q4Attempts === 0) {
+                    const additionalAudioFile = audioFiles.find(file => file.filename === 'D4.wav');
+                    if (additionalAudioFile) {
+                        console.log('Playing D4 audio');
+                        await playAudio(additionalAudioFile.url);
+                    }
                 }
             } else if (questionKey === 'Q6') {
                 const additionalAudioFile = audioFiles.find(file => file.filename === 'D6.wav');
