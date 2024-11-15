@@ -23,7 +23,7 @@ function Complete() {
   }, 0);
 
   const getStatusInfo = (score) => {
-    if (score > 21) return { text: '정상', className: 'el_mark__safety' };
+    if (score > 20) return { text: '정상', className: 'el_mark__safety' };
     if (score > 15) return { text: '초기', className: 'el_mark__warning' };
     if (score > 10) return { text: '중기', className: 'el_mark__middle' };
     return { text: '고도', className: 'el_mark__hazard' };
@@ -48,8 +48,8 @@ function Complete() {
           <ul className="bl_listRing bl_guide hp_mt10">
             <li>21점 이상 : 정상</li>
             <li>16 ~ 20점 : 초기치매</li>
-            <li>15 ~ 11점 : 중기치매</li>
-            <li>10점 미만 : 고도치매</li>
+            <li>11 ~ 15점 : 중기치매</li>
+            <li>10점 이하 : 고도치매</li>
           </ul>
         </div>
         <div className="hp_padding20">
