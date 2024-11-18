@@ -297,30 +297,43 @@ function Question() {
                     throw new Error('Failed to fetch questions');
                 }
                 const data = await response.json();
-                console.log('Fetched data:', data);  // 데이터 로깅
-                setQuestions(data.questions);
+                console.log('Fetched data:', data);  
+     
+                // Q4와 Q2의 위치만 서로 교환
+                // type에따라 예외처리 해야함
+                const reorderedQuestions = [...data.questions];
+                const q2Index = reorderedQuestions.findIndex(q => q.key === 'Q2');
+                const q4Index = reorderedQuestions.findIndex(q => q.key === 'Q4');
+                
+                if (q2Index !== -1 && q4Index !== -1) {
+                    const temp = reorderedQuestions[q2Index];
+                    reorderedQuestions[q2Index] = reorderedQuestions[q4Index];
+                    reorderedQuestions[q4Index] = temp;
+                }
+     
+                setQuestions(reorderedQuestions);
                 setCorrectAnswer(data.correctAnswer);
                 setAudioFiles(data.audio_files);
                 setExplanations(data.explanations);
                 setMaxScores(data.maxScores)
-
+     
                 console.log("audioFiles", audioFiles)
             
                 // answers 초기화
                 const initialAnswers = {};
-                data.questions.forEach(question => {
+                reorderedQuestions.forEach(question => {
                     const answerKey = question.key.replace('Q', 'A');
                     initialAnswers[answerKey] = null;
                 });
                 setAnswers(initialAnswers);
-
+     
                 setLoading(false);
             } catch (error) {
                 console.error('Error fetching questions:', error);
                 setLoading(false);
             }
         };
-
+     
         fetchQuestions();
     }, []);
 
