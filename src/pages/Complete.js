@@ -21,7 +21,6 @@ function Complete() {
       return sum + parseInt(item.value);
     }
   }, 0);
-  console.log(maxScores.find(max => max.key === 'Q5-1'));
 
   const getStatusInfo = (score, type) => {
     if (type === 'simple') {
@@ -51,7 +50,9 @@ function Complete() {
               </div>
             )}
             <div className={`ly_center el_mark ${statusInfo.className}`}>{statusInfo.text}</div>
-            <div className="el_correctNum">{totalScore} 점</div>
+            <div className="el_correctNum">
+              {type === 'simple' ? `${totalScore} 점` : `${totalMaxScore} 점`}
+            </div>
             <div className="el_txt">
             </div>
           </div>
@@ -70,7 +71,7 @@ function Complete() {
             </>
           ) : (
             <>
-              <p className="hp_fs16 hp_fw700">총 {totalMaxScore}점 만점</p>
+              <p className="hp_fs16 hp_fw700">총 30점 만점</p>
               <ul className="bl_listRing bl_guide hp_mt10">
                 <li>21점 이상 : 정상</li>
                 <li>16 ~ 20점 : 초기치매</li>
