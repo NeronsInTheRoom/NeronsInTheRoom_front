@@ -22,35 +22,64 @@ function Complete() {
     }
   }, 0);
 
-  const getStatusInfo = (score) => {
-    if (score > 20) return { text: '정상', className: 'el_mark__safety' };
-    if (score > 15) return { text: '초기', className: 'el_mark__warning' };
-    if (score > 10) return { text: '중기', className: 'el_mark__middle' };
-    return { text: '고도', className: 'el_mark__hazard' };
+  const getStatusInfo = (score, type) => {
+    if (type === 'simple') {
+      if (score > 7) return { text: '정상', className: 'el_mark__safety' };
+      if (score > 5) return { text: '초기', className: 'el_mark__warning' };
+      if (score > 3) return { text: '중기', className: 'el_mark__middle' };
+      return { text: '고도', className: 'el_mark__hazard' };
+    } else {
+      if (score > 20) return { text: '정상', className: 'el_mark__safety' };
+      if (score > 15) return { text: '초기', className: 'el_mark__warning' };
+      if (score > 10) return { text: '중기', className: 'el_mark__middle' };
+      return { text: '고도', className: 'el_mark__hazard' };
+    }
   };
 
-  const statusInfo = getStatusInfo(totalScore);
+  const statusInfo = getStatusInfo(totalScore, type);
   
   return (
     <div className="ly_all hp_f2Back">
       <div className="ly_wrap">
         <div className="hp_fBack hp_padding20">
           <div className="hp_alignC">
+            {type === 'simple' && (
+              <div style={{paddingTop: "30px"}}>
+                <p style={{fontSize: "15px", color: "red"}}>*해당 테스트는 미리보기용 테스트입니다*</p>
+                <p style={{fontSize: "15px", color: "red"}}>*정확한 테스트를 원하시면 정밀 자가진단을 이용 부탁드립니다*</p>
+              </div>
+            )}
             <div className={`ly_center el_mark ${statusInfo.className}`}>{statusInfo.text}</div>
-            <div className="el_correctNum">{totalScore} 점</div>
+            <div className="el_correctNum">
+              {type === 'simple' ? `${totalScore} 점` : `${totalMaxScore} 점`}
+            </div>
             <div className="el_txt">
             </div>
           </div>
           <a className="el_btn el_btnL el_btn__blue hp_mt70" href="/">처음으로</a>
         </div>
         <div className="hp_padding20">
-          <p className="hp_fs16 hp_fw700">총 {totalMaxScore}점 만점</p>
-          <ul className="bl_listRing bl_guide hp_mt10">
-            <li>21점 이상 : 정상</li>
-            <li>16 ~ 20점 : 초기치매</li>
-            <li>11 ~ 15점 : 중기치매</li>
-            <li>10점 이하 : 고도치매</li>
-          </ul>
+        {type === 'simple' ? (
+            <>
+              <p className="hp_fs16 hp_fw700">총 12점 만점</p>
+              <ul className="bl_listRing bl_guide hp_mt10">
+                <li>8점 이상 : 정상</li>
+                <li>6 ~ 7점 : 초기치매</li>
+                <li>4 ~ 5점 : 중기치매</li>
+                <li>3점 이하 : 고도치매</li>
+              </ul>
+            </>
+          ) : (
+            <>
+              <p className="hp_fs16 hp_fw700">총 30점 만점</p>
+              <ul className="bl_listRing bl_guide hp_mt10">
+                <li>21점 이상 : 정상</li>
+                <li>16 ~ 20점 : 초기치매</li>
+                <li>11 ~ 15점 : 중기치매</li>
+                <li>10점 이하 : 고도치매</li>
+              </ul>
+            </>
+          )}
         </div>
         <div className="hp_padding20">
           <table className="bl_resultTB">
