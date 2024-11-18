@@ -12,7 +12,8 @@ function Question() {
     const [maxScores, setMaxScores] = useState([])  
     const [answers, setAnswers] = useState({});
     const [explanations, setExplanations] = useState([]);
-    const [Q4Attempts, setQ4Attempts] = useState(0);  
+    const [Q4Attempts, setQ4Attempts] = useState(0);
+    const [firstQ4Answer, setFirstQ4Answer] = useState(null);  
     const [Q4AllScores, setQ4AllScores] = useState([]); 
     const [failedIndices, setFailedIndices] = useState([]); 
     const [Q7AllScores, setQ7AllScores] = useState([]);
@@ -300,7 +301,6 @@ function Question() {
                 console.log('Fetched data:', data);  
      
                 // Q4와 Q2의 위치만 서로 교환
-                // type에따라 예외처리 해야함
                 const reorderedQuestions = [...data.questions];
                 const q2Index = reorderedQuestions.findIndex(q => q.key === 'Q2');
                 const q4Index = reorderedQuestions.findIndex(q => q.key === 'Q4');
@@ -310,8 +310,11 @@ function Question() {
                     reorderedQuestions[q2Index] = reorderedQuestions[q4Index];
                     reorderedQuestions[q4Index] = temp;
                 }
-     
-                setQuestions(reorderedQuestions);
+    
+                // type에 따라 questions 설정
+                const finalQuestions = type === "simple" ? reorderedQuestions : data.questions;
+                setQuestions(finalQuestions);
+    
                 setCorrectAnswer(data.correctAnswer);
                 setAudioFiles(data.audio_files);
                 setExplanations(data.explanations);
@@ -319,9 +322,9 @@ function Question() {
      
                 console.log("audioFiles", audioFiles)
             
-                // answers 초기화
+                // questions 설정 후 answers 초기화
                 const initialAnswers = {};
-                reorderedQuestions.forEach(question => {
+                finalQuestions.forEach(question => {
                     const answerKey = question.key.replace('Q', 'A');
                     initialAnswers[answerKey] = null;
                 });
@@ -475,22 +478,46 @@ function Question() {
                 }
                 return;
             }
+
+            // Q4에서 다음으로 넘어갈 때 첫 시도 답변으로 교체
+            if (currentQuestion?.key === 'Q4' && firstQ4Answer) {
+                setAnswers(prev => ({
+                    ...prev,
+                    A4: firstQ4Answer
+                }));
+            }
             
             // Q5 처리
             if (currentQuestion?.key === 'Q5' && currentScore === 0) {
-                const nextIndex = questions.findIndex(q => q.key === 'Q6');
-                if (nextIndex !== -1) {
-                    setScores(prev => ({
-                        ...prev,
-                        'Q5-1': 0
-                    }));
-                    setAnswers(prev => ({
-                        ...prev,
-                        'A5-1': null
-                    }));
-                    setCurrentIndex(nextIndex);
+                if (type === "simple") {
+                    const nextIndex = questions.findIndex(q => q.key === 'Q7');
+                    if (nextIndex !== -1) {
+                        setScores(prev => ({
+                            ...prev,
+                            'Q5-1': 0
+                        }));
+                        setAnswers(prev => ({
+                            ...prev,
+                            'A5-1': null
+                        }));
+                        setCurrentIndex(nextIndex);
+                    }
+                    return;
+                } else if (type === "full") {
+                    const nextIndex = questions.findIndex(q => q.key === 'Q6');
+                    if (nextIndex !== -1) {
+                        setScores(prev => ({
+                            ...prev,
+                            'Q5-1': 0
+                        }));
+                        setAnswers(prev => ({
+                            ...prev,
+                            'A5-1': null
+                        }));
+                        setCurrentIndex(nextIndex);
+                    }
+                    return;
                 }
-                return;
             }
             
             // Q6 처리
@@ -674,6 +701,10 @@ function Question() {
 
     const handleAnswerUpdate = (questionNumber, answer) => {
         const answerKey = questionNumber.replace('Q', 'A');
+        // Q4의 첫 시도 답변 저장
+        if (questionNumber === 'Q4' && Q4Attempts === 0) {
+            setFirstQ4Answer(answer);
+        }
         setAnswers(prev => ({
             ...prev,
             [answerKey]: answer

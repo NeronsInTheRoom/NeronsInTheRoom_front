@@ -71,7 +71,7 @@ function Complete() {
             </>
           ) : (
             <>
-              <p className="hp_fs16 hp_fw700">총 30점 만점</p>
+              <p className="hp_fs16 hp_fw700">총 27점 만점</p>
               <ul className="bl_listRing bl_guide hp_mt10">
                 <li>21점 이상 : 정상</li>
                 <li>16 ~ 20점 : 초기치매</li>
