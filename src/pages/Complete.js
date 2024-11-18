@@ -36,6 +36,12 @@ function Complete() {
       <div className="ly_wrap">
         <div className="hp_fBack hp_padding20">
           <div className="hp_alignC">
+            {type === 'simple' && (
+              <div style={{paddingTop: "30px"}}>
+                <p style={{fontSize: "15px", color: "red"}}>*해당 테스트는 미리보기용 테스트입니다*</p>
+                <p style={{fontSize: "15px", color: "red"}}>*정확한 테스트를 원하시면 정밀 자가진단을 이용 부탁드립니다*</p>
+              </div>
+            )}
             <div className={`ly_center el_mark ${statusInfo.className}`}>{statusInfo.text}</div>
             <div className="el_correctNum">{totalScore} 점</div>
             <div className="el_txt">
