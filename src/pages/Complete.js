@@ -21,15 +21,23 @@ function Complete() {
       return sum + parseInt(item.value);
     }
   }, 0);
+  console.log(maxScores.find(max => max.key === 'Q5-1'));
 
-  const getStatusInfo = (score) => {
-    if (score > 20) return { text: '정상', className: 'el_mark__safety' };
-    if (score > 15) return { text: '초기', className: 'el_mark__warning' };
-    if (score > 10) return { text: '중기', className: 'el_mark__middle' };
-    return { text: '고도', className: 'el_mark__hazard' };
+  const getStatusInfo = (score, type) => {
+    if (type === 'simple') {
+      if (score > 7) return { text: '정상', className: 'el_mark__safety' };
+      if (score > 5) return { text: '초기', className: 'el_mark__warning' };
+      if (score > 3) return { text: '중기', className: 'el_mark__middle' };
+      return { text: '고도', className: 'el_mark__hazard' };
+    } else {
+      if (score > 20) return { text: '정상', className: 'el_mark__safety' };
+      if (score > 15) return { text: '초기', className: 'el_mark__warning' };
+      if (score > 10) return { text: '중기', className: 'el_mark__middle' };
+      return { text: '고도', className: 'el_mark__hazard' };
+    }
   };
 
-  const statusInfo = getStatusInfo(totalScore);
+  const statusInfo = getStatusInfo(totalScore, type);
   
   return (
     <div className="ly_all hp_f2Back">
