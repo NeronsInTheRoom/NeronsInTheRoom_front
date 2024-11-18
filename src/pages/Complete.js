@@ -44,13 +44,27 @@ function Complete() {
           <a className="el_btn el_btnL el_btn__blue hp_mt70" href="/">처음으로</a>
         </div>
         <div className="hp_padding20">
-          <p className="hp_fs16 hp_fw700">총 {totalMaxScore}점 만점</p>
-          <ul className="bl_listRing bl_guide hp_mt10">
-            <li>21점 이상 : 정상</li>
-            <li>16 ~ 20점 : 초기치매</li>
-            <li>11 ~ 15점 : 중기치매</li>
-            <li>10점 이하 : 고도치매</li>
-          </ul>
+        {type === 'simple' ? (
+            <>
+              <p className="hp_fs16 hp_fw700">총 12점 만점</p>
+              <ul className="bl_listRing bl_guide hp_mt10">
+                <li>8점 이상 : 정상</li>
+                <li>6 ~ 7점 : 초기치매</li>
+                <li>4 ~ 5점 : 중기치매</li>
+                <li>3점 이하 : 고도치매</li>
+              </ul>
+            </>
+          ) : (
+            <>
+              <p className="hp_fs16 hp_fw700">총 {totalMaxScore}점 만점</p>
+              <ul className="bl_listRing bl_guide hp_mt10">
+                <li>21점 이상 : 정상</li>
+                <li>16 ~ 20점 : 초기치매</li>
+                <li>11 ~ 15점 : 중기치매</li>
+                <li>10점 이하 : 고도치매</li>
+              </ul>
+            </>
+          )}
         </div>
         <div className="hp_padding20">
           <table className="bl_resultTB">
