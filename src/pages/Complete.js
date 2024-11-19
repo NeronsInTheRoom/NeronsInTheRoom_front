@@ -9,7 +9,7 @@ function Complete() {
   const totalScore = Object.entries(scores || {})
     .filter(([key]) => !key.startsWith('Q7-') && key !== 'Q8')
     .reduce((sum, [, score]) => sum + score, 0);
-  
+
   // 총 만점 계산
   const totalMaxScore = maxScores?.reduce((sum, item) => {
     if (type === 'simple') {
@@ -24,9 +24,9 @@ function Complete() {
 
   const getStatusInfo = (score, type) => {
     if (type === 'simple') {
-      if (score > 7) return { text: '정상', className: 'el_mark__safety' };
-      if (score > 5) return { text: '초기', className: 'el_mark__warning' };
-      if (score > 3) return { text: '중기', className: 'el_mark__middle' };
+      if (score > 10) return { text: '정상', className: 'el_mark__safety' };
+      if (score > 7) return { text: '초기', className: 'el_mark__warning' };
+      if (score > 4) return { text: '중기', className: 'el_mark__middle' };
       return { text: '고도', className: 'el_mark__hazard' };
     } else {
       if (score > 20) return { text: '정상', className: 'el_mark__safety' };
@@ -37,16 +37,16 @@ function Complete() {
   };
 
   const statusInfo = getStatusInfo(totalScore, type);
-  
+
   return (
     <div className="ly_all hp_f2Back">
       <div className="ly_wrap">
         <div className="hp_fBack hp_padding20">
           <div className="hp_alignC">
             {type === 'simple' && (
-              <div style={{paddingTop: "30px"}}>
-                <p style={{fontSize: "15px", color: "red"}}>*해당 테스트는 미리보기용 테스트입니다*</p>
-                <p style={{fontSize: "15px", color: "red"}}>*정확한 테스트를 원하시면 정밀 자가진단을 이용 부탁드립니다*</p>
+              <div style={{ paddingTop: "30px" }}>
+                <p style={{ fontSize: "15px", color: "red" }}>*해당 테스트는 미리보기용 테스트입니다*</p>
+                <p style={{ fontSize: "15px", color: "red" }}>*정확한 테스트를 원하시면 정밀 자가진단을 이용 부탁드립니다*</p>
               </div>
             )}
             <div className={`ly_center el_mark ${statusInfo.className}`}>{statusInfo.text}</div>
@@ -59,19 +59,19 @@ function Complete() {
           <a className="el_btn el_btnL el_btn__blue hp_mt70" href="/">처음으로</a>
         </div>
         <div className="hp_padding20">
-        {type === 'simple' ? (
+          {type === 'simple' ? (
             <>
-              <p className="hp_fs16 hp_fw700">총 12점 만점</p>
+              <p className="hp_fs16 hp_fw700">총 15점 만점</p>
               <ul className="bl_listRing bl_guide hp_mt10">
-                <li>8점 이상 : 정상</li>
-                <li>6 ~ 7점 : 초기치매</li>
-                <li>4 ~ 5점 : 중기치매</li>
-                <li>3점 이하 : 고도치매</li>
+                <li>10점 이상 : 정상</li>
+                <li>8 ~ 10점 : 초기치매</li>
+                <li>5 ~ 7점 : 중기치매</li>
+                <li>5점 이하 : 고도치매</li>
               </ul>
             </>
           ) : (
             <>
-              <p className="hp_fs16 hp_fw700">총 27점 만점</p>
+              <p className="hp_fs16 hp_fw700">총 30점 만점</p>
               <ul className="bl_listRing bl_guide hp_mt10">
                 <li>21점 이상 : 정상</li>
                 <li>16 ~ 20점 : 초기치매</li>
@@ -84,10 +84,10 @@ function Complete() {
         <div className="hp_padding20">
           <table className="bl_resultTB">
             <colgroup>
-              <col style={{ width:"15%"}} />
-              <col style={{ width:"*"}} />
-              <col style={{ width:"15%"}} />
-              <col style={{ width:"15%"}} />
+              <col style={{ width: "15%" }} />
+              <col style={{ width: "*" }} />
+              <col style={{ width: "15%" }} />
+              <col style={{ width: "15%" }} />
             </colgroup>
             <tbody>
               {questions?.map((question) => {
@@ -109,10 +109,10 @@ function Complete() {
                     <tr className='bl_resultTB__line hp_fBack'>
                       <th>질문</th>
                       <td colSpan={3}>
-                      {question.key === 'Q3-1'
-                        ? `${question.value} ${place && !['집', '병원'].includes(place) ? `${place}인가요?` : ''}`
-                        : question.value}
-                        
+                        {question.key === 'Q3-1'
+                          ? `${question.value} ${place && !['집', '병원'].includes(place) ? `${place}인가요?` : ''}`
+                          : question.value}
+
                         {isQ8 && (
                           <>
                             <br />
