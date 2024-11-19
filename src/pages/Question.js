@@ -415,7 +415,7 @@ function Question() {
                 }, 0);
                 
                 // 최대 3점으로 제한
-                totalScore = Math.min(totalScore, 3);
+                totalScore = Math.min(totalScore, 6);
                 relevantScores[question.key] = totalScore;
             } 
             // Q7 하위 문제는 제외
