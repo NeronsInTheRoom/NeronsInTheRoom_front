@@ -815,7 +815,7 @@ function Question() {
                                 className={`el_btn el_btnL ${
                                     currentIndex === questions.length - 1 
                                         ? 'el_btn__blue' 
-                                        : 'el_btn__black'
+                                        : 'el_btn__blue'
                                 } hp_mt10 hp_wd100`}
                             >
                                 {currentIndex === questions.length - 1 ? '완료' : '다음'}
